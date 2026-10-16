@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Deploy to GitHub Pages](https://github.com/asmita-ai/cheminformatics-explorer/actions/workflows/deploy.yml/badge.svg)](https://github.com/asmita-ai/cheminformatics-explorer/actions/workflows/deploy.yml)
-[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.placeholder-blue.svg)](https://zenodo.org/)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23418253.svg)](https://doi.org/10.5281/zenodo.23418253)
 
 **Cheminformatics Explorer** is an open-source, keyless, client-side web application designed to help chemistry students, educators, and pharmaceutical researchers explore chemical space interactively. By integrating hardware-accelerated 3D conformer graphics (3Dmol.js), in-browser 2D chemical structure graph depictions with functional group SMARTS substructure highlighting (RDKit.js WASM), oral drug-likeness evaluation (Lipinski Rule of 5 and Veber rules), medicinal chemistry structural alerts (PAINS and Brenk filters), and aggregated laboratory safety classifications (UN GHS via PubChem PUG View), this workbench bridges the gap between complex computational chemistry tools and accessible educational software without requiring server backends, database installations, or API tokens.
 
@@ -39,7 +39,7 @@ Conversely, standard chemical web search portals typically present static proper
 - **Alternative Chemical Input Modalities:** Direct chemical SMILES structure query resolution alongside an integrated 2D JSME molecule sketcher drawer.
 - **Comparative Molecular Analysis:** Side-by-side descriptor matrix with quantitative delta ($\Delta$) computations for two molecules simultaneously.
 - **Client-Side Optimization & Privacy:** Zero tracking, zero analytics, strictly keyless. Enforces a client-side request queue ($\le 3$ requests/sec) with exponential backoff on HTTP 429/503 and 24-hour `sessionStorage` caching.
-- **Accessibility:** 100% Axe-Core compliance across WCAG 2.1 Level AA rules, visible focus rings, ARIA landmarks, and 360 px viewport zero-horizontal-scroll layout.
+- **Accessibility:** Passed all 43 automated Axe-Core checks across WCAG 2.1 Level AA rules, visible focus rings, ARIA landmarks, and 360 px viewport zero-horizontal-scroll layout.
 
 ---
 
@@ -80,7 +80,7 @@ Conversely, standard chemical web search portals typically present static proper
 
 ## Development Statement
 
-This tool was conceived, directed and scientifically validated by Asmita Karmakar, an M.Sc. Chemistry graduate without a formal programming background. The source code was written with the assistance of generative AI tools under the author's direction. The author defined the scope, selected the data sources, reviewed the outputs and checked results against known compounds. The author takes responsibility for the content. Errors may remain, so please report issues on GitHub.
+This tool was conceived, directed and scientifically validated by Asmita Karmakar, an M.Sc. Chemistry graduate. As the author has no formal programming background, the source code was written with the assistance of generative AI tools under the author's direction. The author defined the scope, selected the data sources, reviewed the outputs and checked results against reference compounds in PubChem. The author is responsible for the content. Errors may remain; please report them at https://github.com/asmita-ai/cheminformatics-explorer/issues
 
 ---
 
@@ -107,15 +107,17 @@ python -m http.server 8000
 
 If you utilize Cheminformatics Explorer in educational curricula, academic coursework, or published scientific research, please cite the application using the following BibTeX format or refer to [`CITATION.cff`](CITATION.cff):
 
+Cite all versions: https://doi.org/10.5281/zenodo.23418253
+
 ```bibtex
 @software{Karmakar_Cheminformatics_Explorer_2026,
   author       = {Karmakar, Asmita},
   title        = {{Cheminformatics Explorer: Keyless Client-Side Chemical Space Workbench}},
   year         = {2026},
-  version      = {1.0.0},
+  version      = {1.0.1},
   publisher    = {GitHub},
   url          = {https://github.com/asmita-ai/cheminformatics-explorer},
-  doi          = {10.5281/zenodo.placeholder}
+  doi          = {10.5281/zenodo.23418253}
 }
 ```
 

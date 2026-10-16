@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-10-16
+
+- Release v1.0.0 was archived on Zenodo as [10.5281/zenodo.23418254](https://doi.org/10.5281/zenodo.23418254).
+- **Concept DOI & Archival Metadata:** Replaced placeholder DOI badge with the Zenodo concept DOI badge (`10.5281/zenodo.23418253`) in `README.md`, updated BibTeX citation entry, and added "Cite all versions: https://doi.org/10.5281/zenodo.23418253". Added `doi: 10.5281/zenodo.23418253`, version 1.0.1, and release date 2026-10-16 to `CITATION.cff`.
+- **Aligned Development Statement:** Synchronized exact development statement across `README.md`, the About modal in `index.html`, and `CITATION.cff` notes.
+- **Application Methods Citation:** Included DOI `10.5281/zenodo.23418253` in `copyCitation` clipboard helper and About modal citation section.
+- **GHS Safety Accuracy Fixes:** In `ghs(cid)`, updated consensus notification label to "reported by ${pct} of reports" and restricted `(oral)` route-of-exposure qualification to appear only when explicitly present in PubChem's own record text.
+- **Documentation Clarification:** Changed "100% Axe-Core compliance" to "passed all 43 automated Axe-Core checks" in `README.md` and `docs/TESTING.md`.
+
 ## [1.0.0] - 2026-10-15
 
 ### Added

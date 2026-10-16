@@ -1,8 +1,8 @@
 # Test Results & Validation Summary
 
-**Project:** Cheminformatics Explorer v1.0.0  
+**Project:** Cheminformatics Explorer v1.0.1  
 **Author:** Asmita Karmakar ([ORCID 0009-0004-4710-5237](https://orcid.org/0009-0004-4710-5237))  
-**Date:** October 15, 2026  
+**Date:** October 16, 2026  
 **Status:** ALL ACCEPTANCE CRITERIA PASSED
 
 ---
@@ -47,7 +47,7 @@ All 15 required chemical test inputs resolved properly without uncaught exceptio
 
 ## 3. Accessibility & Performance Benchmarks
 
-- **Axe-Core / Lighthouse Accessibility:** Audited across WCAG 2.1 Level AA rules; passed **43 out of 43 audit checks with 0 violations** (Score: **100%**).
+- **Axe-Core / Lighthouse Accessibility:** Audited across WCAG 2.1 Level AA rules; passed all 43 automated Axe-Core checks with 0 violations.
 - **Mobile Viewport (360 px):** Verified `scrollWidth === clientWidth === 360` with zero horizontal scrolling. 3D viewer stacks cleanly above tabs.
 - **Network Request Footprint:** Initial search for caffeine executes strictly **5 requests** (CID resolution, properties, 3D SDF conformer, synonyms, and record description), well below the $\le 6$ request limit.
 - **Uncaught Page Exceptions:** **0** across all automated test runs.

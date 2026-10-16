@@ -1,8 +1,9 @@
 cff-version: 1.2.0
 message: "If you use this software in academic research or educational coursework, please cite it using the metadata below."
 title: "Cheminformatics Explorer: Keyless Client-Side Chemical Space Workbench"
-version: 1.0.0
-date-released: 2026-10-15
+version: 1.0.1
+doi: 10.5281/zenodo.23418253
+date-released: 2026-10-16
 authors:
   - family-names: Karmakar
     given-names: Asmita
@@ -19,6 +20,8 @@ abstract: >-
   Veber criteria, Crippen logP vs XLogP3-AA), medicinal chemistry structural alerts
   (PAINS and Brenk filters), GHS laboratory safety hazard classifications, and
   chemical ontology annotations (ChEBI and ChEMBL) with honest scientific provenance labeling.
+notes: >-
+  This tool was conceived, directed and scientifically validated by Asmita Karmakar, an M.Sc. Chemistry graduate. As the author has no formal programming background, the source code was written with the assistance of generative AI tools under the author's direction. The author defined the scope, selected the data sources, reviewed the outputs and checked results against reference compounds in PubChem. The author is responsible for the content. Errors may remain; please report them at https://github.com/asmita-ai/cheminformatics-explorer/issues
 keywords:
   - cheminformatics
   - computational-chemistry
