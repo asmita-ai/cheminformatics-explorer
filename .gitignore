@@ -1,0 +1,17 @@
+# Dependencies & package files
+node_modules/
+package.json
+package-lock.json
+
+# Development scripts & scratch files
+scripts/
+test_*.js
+debug_*.js
+*.log
+*.tmp
+raw_screenshots/
+
+# Build and legacy files
+dist/
+/cheminformatics-explorer.html
+/TESTING.md

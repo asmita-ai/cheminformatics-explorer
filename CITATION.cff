@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: "If you use this software in academic research or educational coursework, please cite it using the metadata below."
+title: "Cheminformatics Explorer: Keyless Client-Side Chemical Space Workbench"
+version: 1.0.0
+date-released: 2026-10-15
+authors:
+  - family-names: Karmakar
+    given-names: Asmita
+    orcid: "https://orcid.org/0009-0004-4710-5237"
+    email: "karmakarasmita147@gmail.com"
+repository-code: "https://github.com/asmita-ai/cheminformatics-explorer"
+url: "https://asmita-ai.github.io/cheminformatics-explorer/"
+license: MIT
+abstract: >-
+  Cheminformatics Explorer is a client-side, keyless web application designed
+  for chemistry students, researchers, and educators. It integrates real-time
+  3D molecular conformations (3Dmol.js), 2D structure graphs and SMARTS functional
+  group matching (RDKit.js WASM), oral drug-likeness evaluation (Lipinski Rule of 5,
+  Veber criteria, Crippen logP vs XLogP3-AA), medicinal chemistry structural alerts
+  (PAINS and Brenk filters), GHS laboratory safety hazard classifications, and
+  chemical ontology annotations (ChEBI and ChEMBL) with honest scientific provenance labeling.
+keywords:
+  - cheminformatics
+  - computational-chemistry
+  - molecular-visualization
+  - rdkit
+  - 3dmoljs
+  - pubchem
+  - lipinski-rule-of-five
+  - drug-likeness
+  - chemical-education

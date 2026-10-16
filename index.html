@@ -1,0 +1,3188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cheminformatics Explorer</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚗️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.4.2/3Dmol-min.js"></script>
+<style>
+[hidden] {
+  display: none !important;
+}
+:root {
+  --bg: #eef1f4;
+  --panel: #ffffff;
+  --ink: #14202b;
+  --mute: #536471;
+  --line: #d6dde3;
+  --ind: #c2255c;
+  --ind-soft: #fdf2f5;
+  --ok: #198754;
+  --warn: #b45309;
+  --bad: #c92a2a;
+  --view: #0e1a24;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b1218;
+    --panel: #131d26;
+    --ink: #e6edf3;
+    --mute: #8d9eae;
+    --line: #25323e;
+    --ind: #f06595;
+    --ind-soft: #24141d;
+    --ok: #3ccf91;
+    --warn: #f59f00;
+    --bad: #ff6b6b;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 16px/1.55 "Bricolage Grotesque", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 20px 56px;
+  overflow-x: hidden;
+}
+@media (max-width: 600px) {
+  .wrap {
+    padding: 16px 12px 40px;
+  }
+}
+h1 {
+  font-weight: 800;
+  font-size: clamp(26px, 5vw, 44px);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  margin: 0 0 6px;
+}
+h1 i {
+  font-style: normal;
+  color: var(--ind);
+}
+.sub {
+  color: var(--mute);
+  max-width: 65ch;
+  margin: 0 0 20px;
+  font-size: 16px;
+}
+form {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 100%;
+}
+input[type=text] {
+  flex: 1 1 240px;
+  min-width: 0;
+  max-width: 100%;
+  font: inherit;
+  padding: 13px 16px;
+  border-radius: 10px;
+  border: 1.5px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+input:focus,
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--ind) 45%, transparent);
+  outline-offset: 2px;
+}
+button {
+  font: 600 15px inherit;
+  padding: 13px 20px;
+  border-radius: 10px;
+  border: none;
+  background: var(--ind);
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.05s ease;
+  white-space: nowrap;
+}
+button:hover:not(:disabled) {
+  opacity: 0.92;
+}
+button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 1.5px solid var(--line);
+  padding: 7px 13px;
+  font-size: 13.5px;
+}
+.ghost:hover:not(:disabled) {
+  background: var(--ind-soft);
+  border-color: var(--ind);
+  color: var(--ind);
+}
+.chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 12px 0 20px;
+  font-size: 13.5px;
+  align-items: center;
+  max-width: 100%;
+}
+.chips span {
+  color: var(--mute);
+  margin-right: 4px;
+}
+.chips button {
+  padding: 5px 11px;
+  font-size: 13px;
+  border-radius: 99px;
+}
+main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+  margin-top: 10px;
+  width: 100%;
+  max-width: 100%;
+}
+@media (max-width: 860px) {
+  main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.vp {
+  position: sticky;
+  top: 12px;
+  background: var(--view);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+}
+@media (max-width: 860px) {
+  .vp { position: static; }
+}
+#view {
+  width: 100%;
+  max-width: 100%;
+  height: min(62vh, 520px);
+  min-height: 340px;
+  position: relative;
+  overflow: hidden;
+}
+@media (max-width: 600px) {
+  #view {
+    min-height: 270px;
+    height: 40vh;
+  }
+}
+#view canvas {
+  max-width: 100% !important;
+}
+.viewer-banner {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 5;
+  pointer-events: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.viewer-badge {
+  background: rgba(14, 26, 36, 0.85);
+  backdrop-filter: blur(4px);
+  color: #9fb3c4;
+  font-size: 12px;
+  padding: 4px 9px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.bar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 10px;
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+  max-width: 100%;
+}
+.bar .ghost {
+  padding: 6px 11px;
+}
+@media (max-width: 480px) {
+  .bar .ghost {
+    padding: 6px 9px;
+    font-size: 12.5px;
+  }
+}
+.msg {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  color: #9fb3c4;
+  text-align: center;
+  padding: 24px;
+  pointer-events: none;
+  z-index: 2;
+  font-size: 15px;
+}
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 22px;
+  min-height: 400px;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+}
+@media (max-width: 600px) {
+  .card {
+    padding: 16px 14px;
+    border-radius: 12px;
+  }
+}
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 4px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+  max-width: 100%;
+  width: 100%;
+}
+.tabs button {
+  background: none;
+  color: var(--mute);
+  border-radius: 0;
+  padding: 8px 12px;
+  border-bottom: 3px solid transparent;
+  font-weight: 600;
+  font-size: 14.5px;
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .tabs button {
+    flex-shrink: 0;
+    padding: 8px 10px;
+    font-size: 13.5px;
+  }
+}
+.tabs button:hover:not([aria-selected=true]) {
+  color: var(--ink);
+}
+.tabs button[aria-selected=true] {
+  color: var(--ink);
+  border-color: var(--ind);
+}
+h2 {
+  margin: 0;
+  font-size: 26px;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.formula {
+  font-size: 20px;
+  color: var(--ind);
+  font-weight: 700;
+  margin: 4px 0 14px;
+}
+.desc {
+  font-size: 14.5px;
+  color: var(--mute);
+  margin: 0 0 16px;
+  line-height: 1.6;
+}
+dl {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 8px 16px;
+  margin: 0 0 18px;
+  font-size: 14.5px;
+  max-width: 100%;
+}
+@media (max-width: 480px) {
+  dl {
+    grid-template-columns: 1fr;
+    gap: 4px 0;
+    margin: 0 0 14px;
+  }
+  dt {
+    font-size: 12.5px;
+    margin-top: 6px;
+  }
+  dd {
+    font-size: 14px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed var(--line);
+  }
+}
+dt {
+  color: var(--mute);
+  font-weight: 600;
+}
+dd {
+  margin: 0;
+  font-weight: 500;
+  word-break: break-word;
+}
+.smi {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--bg);
+  padding: 4px 8px;
+  border-radius: 6px;
+  word-break: break-all;
+}
+.rule {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14.5px;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.rule small {
+  color: var(--mute);
+  font-size: 12.5px;
+  flex-basis: 100%;
+}
+.rule b {
+  font-weight: 700;
+}
+.ok { color: var(--ok); }
+.warn { color: var(--warn); }
+.bad { color: var(--bad); }
+.verdict {
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14.5px;
+  margin: 0 0 16px;
+  border: 1.5px solid currentColor;
+}
+.verdict.ok { background: color-mix(in srgb, var(--ok) 10%, transparent); }
+.verdict.warn { background: color-mix(in srgb, var(--warn) 10%, transparent); }
+.verdict.bad { background: color-mix(in srgb, var(--bad) 10%, transparent); }
+.gauge {
+  width: 100%;
+  height: 6px;
+  background: var(--line);
+  border-radius: 99px;
+  overflow: hidden;
+  margin: 4px 0 6px;
+}
+.gauge b {
+  display: block;
+  height: 100%;
+  transition: width 0.3s ease;
+}
+.pics {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 12px 0 16px;
+}
+.pics img {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  background: #fff;
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
+.hs {
+  font-size: 13.5px;
+  margin: 6px 0;
+  padding-left: 12px;
+  border-left: 3px solid var(--warn);
+  line-height: 1.45;
+}
+.svgbox {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 0 14px;
+  min-height: 240px;
+  max-width: 100%;
+  overflow: hidden;
+}
+.svgbox svg {
+  max-width: 100%;
+  height: auto;
+  max-height: 280px;
+}
+.fg {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 0 0 14px;
+}
+.fg button {
+  padding: 5px 11px;
+  font-size: 13px;
+  border-radius: 99px;
+}
+.fg button[aria-pressed=true] {
+  background: var(--ind);
+  border-color: var(--ind);
+  color: #fff;
+}
+.syn {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.syn span {
+  background: var(--bg);
+  color: var(--mute);
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 12.5px;
+}
+.stat {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+  max-width: 100%;
+}
+.stat > div, .stat > span {
+  background: var(--bg);
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  border: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+}
+.stat b {
+  font-size: 17px;
+  color: var(--ink);
+  margin-top: 2px;
+}
+.provenance-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--mute);
+  border: 1px solid var(--line);
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.notice {
+  padding: 14px 16px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  border-left: 4px solid var(--mute);
+  background: var(--bg);
+}
+.notice h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+.notice-warn {
+  border-left-color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 8%, var(--panel));
+}
+.notice-err {
+  border-left-color: var(--bad);
+  background: color-mix(in srgb, var(--bad) 8%, var(--panel));
+}
+.notice-info {
+  border-left-color: var(--ind);
+  background: var(--ind-soft);
+}
+.loading-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: var(--mute);
+  text-align: center;
+}
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--line);
+  border-top-color: var(--ind);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 12px;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin-top: 10px;
+}
+th, td {
+  padding: 9px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+th {
+  color: var(--mute);
+  font-weight: 600;
+}
+.sim-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+  margin: 12px 0 18px;
+}
+.sim-card {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.05s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.sim-card:hover {
+  border-color: var(--ind);
+  transform: translateY(-2px);
+}
+.sim-card:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--ind) 45%, transparent);
+  outline-offset: 2px;
+}
+.sim-thumb {
+  width: 100%;
+  height: 75px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  overflow: hidden;
+}
+.sim-thumb svg {
+  max-width: 100%;
+  max-height: 100%;
+}
+.sim-name {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.sim-cid {
+  font-size: 11px;
+  color: var(--mute);
+  margin-top: 2px;
+}
+.bio-box {
+  background: var(--ind-soft);
+  border: 1px solid color-mix(in srgb, var(--ind) 25%, transparent);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin: 14px 0 18px;
+}
+.bio-box h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  color: var(--ind);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.role-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.role-pill {
+  background: #fff;
+  border: 1px solid color-mix(in srgb, var(--ind) 35%, transparent);
+  color: var(--ind);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+}
+.alert-box {
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin: 6px 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.alert-clean {
+  background: color-mix(in srgb, var(--ok) 12%, transparent);
+  border: 1px solid var(--ok);
+  color: var(--ok);
+  font-weight: 600;
+}
+.alert-hit {
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+  border: 1px solid var(--warn);
+  color: var(--ink);
+}
+.mode-toggle {
+  display: inline-flex;
+  background: var(--bg);
+  border: 1.5px solid var(--line);
+  border-radius: 99px;
+  padding: 2px;
+  gap: 2px;
+}
+.mode-btn {
+  background: transparent;
+  color: var(--mute);
+  border: none;
+  border-radius: 99px;
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.mode-btn.active {
+  background: var(--panel);
+  color: var(--ind);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+.edu-callout {
+  background: var(--ind-soft);
+  border: 1px solid color-mix(in srgb, var(--ind) 25%, transparent);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 0 0 16px;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.edu-callout strong {
+  color: var(--ind);
+}
+.researcher-spec {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 0 0 16px;
+  font-size: 12.5px;
+}
+.researcher-spec code {
+  font-family: ui-monospace, monospace;
+}
+.delta-pos {
+  color: var(--ok);
+  font-weight: 600;
+}
+.delta-neg {
+  color: var(--warn);
+  font-weight: 600;
+}
+.drawer-box {
+  background: var(--panel);
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 12px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+}
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.drawer-header h3 {
+  margin: 0;
+  font-size: 16px;
+}
+#jsme-applet-container {
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.empty-state {
+  text-align: center;
+  padding: 32px 16px;
+}
+.empty-badge {
+  font-size: 40px;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+.empty-title {
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0 0 8px;
+  letter-spacing: -0.02em;
+}
+.empty-desc {
+  color: var(--mute);
+  max-width: 48ch;
+  margin: 0 auto 24px;
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+.empty-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  text-align: left;
+  margin: 20px 0 24px;
+}
+.empty-card {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.empty-card-title {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 4px;
+  color: var(--ink);
+}
+.empty-card p {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--mute);
+  line-height: 1.45;
+}
+.empty-quickstart {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.empty-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 10px;
+}
+.empty-chips button {
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 99px;
+}
+.skeleton-container {
+  padding: 16px 4px;
+}
+.skeleton-title {
+  height: 28px;
+  width: 55%;
+  background: var(--line);
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+.skeleton-subtitle {
+  height: 18px;
+  width: 35%;
+  background: var(--line);
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+.skeleton-card {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+.skeleton-line {
+  height: 14px;
+  background: var(--line);
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.skeleton-line:last-child {
+  margin-bottom: 0;
+}
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.skeleton-cell {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+}
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 19, 26, 0.72);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  padding: 16px;
+}
+.modal-backdrop[hidden],
+.drawer-box[hidden] {
+  display: none !important;
+}
+.modal-dialog {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 640px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+  padding: 24px;
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 12px;
+}
+.modal-header h2 {
+  font-size: 22px;
+  margin: 0;
+}
+.modal-body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink);
+}
+.modal-section {
+  margin-bottom: 18px;
+}
+.modal-section h3 {
+  font-size: 15px;
+  color: var(--ind);
+  margin: 0 0 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.modal-section p, .modal-section ul {
+  margin: 0 0 8px;
+  color: var(--mute);
+}
+.modal-section ul {
+  padding-left: 20px;
+}
+.modal-section li {
+  margin-bottom: 4px;
+}
+footer {
+  margin-top: 36px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  color: var(--mute);
+  font-size: 13.5px;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+footer a {
+  color: var(--ind);
+  text-decoration: none;
+}
+footer a:hover {
+  text-decoration: underline;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:8px">
+    <div>
+      <h1>Cheminformatics <i>Explorer</i></h1>
+      <p class="sub">Keyless in-browser chemical space analyzer. Inspect 3D conformers, 2D functional groups, oral drug-likeness rules, and GHS laboratory safety.</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <div class="mode-toggle" role="radiogroup" aria-label="Audience Learning Mode">
+        <button type="button" role="radio" aria-checked="true" data-mode="student" id="mode-student" class="mode-btn active" title="Student mode: accessible chemical explanations and intuitive guides">Student</button>
+        <button type="button" role="radio" aria-checked="false" data-mode="researcher" id="mode-researcher" class="mode-btn" title="Researcher mode: technical descriptors, SMARTS patterns, and formal citations">Researcher</button>
+      </div>
+      <button type="button" class="ghost" id="btn-cite" title="Copy academic methods citation to clipboard">📋 Copy Citation</button>
+      <button type="button" class="ghost" id="btn-about" aria-haspopup="dialog" title="About Cheminformatics Explorer, citations, and scientific provenance">ℹ️ About</button>
+    </div>
+  </header>
+  
+  <form id="f" role="search" aria-label="Compound search">
+    <input type="text" id="q" placeholder="Enter compound name, formula, or SMILES (e.g. caffeine, C6H6, aspirin)" autocomplete="off" list="ac" aria-label="Compound name, formula, SMILES, or CID" maxlength="250">
+    <datalist id="ac"></datalist>
+    <button type="submit" id="search-btn">Explore</button>
+    <button type="button" class="ghost" id="btn-draw" aria-expanded="false" aria-controls="drawer-box" title="Sketch 2D chemical structure in interactive drawer">✏️ Draw Structure</button>
+  </form>
+
+  <aside class="drawer-box" id="drawer-box" hidden aria-label="2D Structure Sketcher Drawer">
+    <div class="drawer-header">
+      <div>
+        <h3 id="drawer-title">✏️ 2D Molecule Sketcher (JSME)</h3>
+        <span style="font-size:12px;color:var(--mute)">Draw a chemical structure and click Search to query PubChem</span>
+      </div>
+      <button type="button" class="ghost" id="btn-close-drawer" aria-label="Close structure sketcher drawer">✕ Close</button>
+    </div>
+    <div id="jsme-applet-container">
+      <div id="jsme-loading" style="padding:20px;color:var(--mute);font-size:14px">Loading 2D chemical sketcher engine…</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+      <button type="button" id="btn-drawer-search">🔍 Search Drawn Structure</button>
+      <button type="button" class="ghost" id="btn-drawer-load-current">Load Current Molecule</button>
+      <button type="button" class="ghost" id="btn-drawer-clear">Clear Sketcher</button>
+    </div>
+  </aside>
+
+  <nav class="chips" aria-label="Quick example compounds">
+    <span>Quick try:</span>
+    <button type="button" class="ghost" data-q="caffeine">Caffeine</button>
+    <button type="button" class="ghost" data-q="aspirin">Aspirin</button>
+    <button type="button" class="ghost" data-q="ibuprofen">Ibuprofen</button>
+    <button type="button" class="ghost" data-q="atorvastatin">Atorvastatin</button>
+    <button type="button" class="ghost" data-q="penicillin G">Penicillin G</button>
+    <button type="button" class="ghost" data-q="glucose">Glucose</button>
+    <button type="button" class="ghost" data-q="benzene">Benzene</button>
+  </nav>
+
+  <main>
+    <section class="vp" aria-label="3D Molecular Viewer">
+      <div id="view" role="img" aria-label="Interactive 3D molecular structure viewer">
+        <div class="viewer-banner">
+          <span class="viewer-badge" id="vbadge">Standby</span>
+        </div>
+        <div class="msg" id="vmsg">Search a compound to view its 3D molecular conformation.</div>
+      </div>
+      <div class="bar">
+        <button type="button" class="ghost" data-s="bs" aria-pressed="true">Ball &amp; Stick</button>
+        <button type="button" class="ghost" data-s="st" aria-pressed="false">Sticks</button>
+        <button type="button" class="ghost" data-s="sp" aria-pressed="false">Spheres</button>
+        <button type="button" class="ghost" id="spin" aria-pressed="true">Spin</button>
+        <button type="button" class="ghost" id="dl" style="margin-left:auto">Download SDF</button>
+      </div>
+    </section>
+
+    <article class="card">
+      <div class="tabs" role="tablist" aria-label="Analysis Tabs">
+        <button role="tab" id="tab-ov" aria-selected="true" aria-controls="pane" data-t="ov">Overview</button>
+        <button role="tab" id="tab-st" aria-selected="false" aria-controls="pane" data-t="st" tabindex="-1">Structure</button>
+        <button role="tab" id="tab-dd" aria-selected="false" aria-controls="pane" data-t="dd" tabindex="-1">Drug-likeness</button>
+        <button role="tab" id="tab-sf" aria-selected="false" aria-controls="pane" data-t="sf" tabindex="-1">Safety</button>
+        <button role="tab" id="tab-sm" aria-selected="false" aria-controls="pane" data-t="sm" tabindex="-1">Similar</button>
+        <button role="tab" id="tab-ex" aria-selected="false" aria-controls="pane" data-t="ex" tabindex="-1">Properties &amp; Bio</button>
+        <button role="tab" id="tab-cp" aria-selected="false" aria-controls="pane" data-t="cp" tabindex="-1">Compare</button>
+      </div>
+      <div id="pane" role="tabpanel" aria-labelledby="tab-ov">
+        <!-- Rendered dynamically -->
+      </div>
+    </article>
+  </main>
+
+  <section class="hist" id="hist" aria-label="Recent search history" style="margin-top:20px;font-size:13px;color:var(--mute)"></section>
+
+  <footer>
+    <div>Data sources: <a href="https://pubchem.ncbi.nlm.nih.gov/" target="_blank" rel="noopener noreferrer">PubChem</a> · <a href="https://cactus.nci.nih.gov/" target="_blank" rel="noopener noreferrer">NCI CIR</a> · <a href="https://www.ebi.ac.uk/chebi/" target="_blank" rel="noopener noreferrer">ChEBI</a> · <a href="https://www.ebi.ac.uk/chembl/" target="_blank" rel="noopener noreferrer">ChEMBL</a></div>
+    <div>Engines: <a href="https://www.rdkit.org/" target="_blank" rel="noopener noreferrer">RDKit.js</a> · <a href="https://3dmol.csb.pitt.edu/" target="_blank" rel="noopener noreferrer">3Dmol.js</a> · <a href="https://peter-ertl.com/jsme/" target="_blank" rel="noopener noreferrer">JSME</a></div>
+  </footer>
+</div>
+
+<!-- Accessible About Modal -->
+<div id="about-modal" class="modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="about-title">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <div>
+        <h2 id="about-title">About Cheminformatics Explorer</h2>
+        <div style="font-size:13px;color:var(--mute);margin-top:2px">v1.0.0 · Open-Source Chemistry Workbench</div>
+      </div>
+      <button type="button" class="ghost" id="btn-close-about" aria-label="Close About dialog" style="padding:4px 10px;font-size:14px">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <section class="modal-section" aria-labelledby="about-dev-title">
+        <h3 id="about-dev-title">💡 Development Statement</h3>
+        <p style="font-size:13.5px;line-height:1.6;color:var(--ink);background:var(--bg);padding:12px;border-radius:8px;border:1px solid var(--line)">
+          This tool was conceived, directed and scientifically validated by Asmita Karmakar, an M.Sc. Chemistry graduate without a formal programming background. The source code was written with the assistance of generative AI tools under the author's direction. The author defined the scope, selected the data sources, reviewed the outputs and checked results against known compounds. The author takes responsibility for the content. Errors may remain, so please report issues on GitHub.
+        </p>
+      </section>
+
+      <section class="modal-section" aria-labelledby="about-sources-title">
+        <h3 id="about-sources-title">🔬 Primary Data Sources &amp; Computational Engines</h3>
+        <p>This application operates entirely on the client side without servers, backend databases, proprietary tracking, or API keys:</p>
+        <ul>
+          <li><strong>PubChem (PUG REST &amp; PUG View):</strong> Molecular records, computed 3D conformers, physical properties, and aggregated supplier GHS hazard classifications (National Center for Biotechnology Information, NLM, NIH).</li>
+          <li><strong>RDKit.js MinimalLib (WASM):</strong> In-browser cheminformatics toolkit for 2D coordinate generation, clean vector SVG depictions, Wildman-Crippen logP descriptor calculation, and SMARTS substructure pattern matching (Greg Landrum et al.).</li>
+          <li><strong>3Dmol.js:</strong> WebGL-based molecular graphics engine for hardware-accelerated 3D conformer rendering (Nicholas Rego &amp; David Koes, University of Pittsburgh).</li>
+          <li><strong>NCI Chemical Identifier Resolver (CIR):</strong> Secondary identifier resolution connecting compound names to standardized InChIKeys (National Cancer Institute).</li>
+          <li><strong>ChEBI &amp; ChEMBL:</strong> Chemical Entities of Biological Interest ontology roles and bioactivity clinical trial phases (European Bioinformatics Institute, EMBL-EBI).</li>
+          <li><strong>JSME Molecule Sketcher:</strong> Interactive 2D chemical structure editor (Peter Ertl &amp; Bruno Bienfait).</li>
+        </ul>
+      </section>
+
+      <section class="modal-section" aria-labelledby="about-limits-title">
+        <h3 id="about-limits-title">⚠️ Known Scientific Limitations</h3>
+        <ul>
+          <li><strong>Computed 3D Conformers:</strong> 3D coordinate structures retrieved from PubChem are computed theoretical conformers (energy-minimized using MMFF94s force fields), not experimental single-crystal X-ray diffraction determinations.</li>
+          <li><strong>Compounds without 3D Records:</strong> Elemental salts (e.g., sodium chloride), elemental metals, and certain unassigned stereoisomers do not possess 3D records in PubChem. When 3D conformers are unavailable, the app automatically falls back to 2D coordinate layouts and marks them honestly.</li>
+          <li><strong>LogP Methodological Differences:</strong> PubChem XLogP3-AA uses an empirical atom-additive prediction with calibration factors, whereas RDKit Crippen logP uses 68 Wildman-Crippen atomic environment fragment contributions. Differences of 0.5 to 1.5 log units are normal between these independent computational models.</li>
+          <li><strong>GHS Supplier Variability:</strong> GHS hazard classifications represent aggregated notifications from chemical manufacturers under UN GHS, EU CLP, and OSHA HazCom. Supplier consensus and classification categories may vary between vendor submissions.</li>
+        </ul>
+      </section>
+
+      <section class="modal-section" aria-labelledby="about-cite-title">
+        <h3 id="about-cite-title">📖 Academic Methods Citation</h3>
+        <p style="font-size:13px;line-height:1.5;background:var(--bg);padding:10px 12px;border-radius:8px;border:1px solid var(--line);color:var(--ink)">
+          Chemical structures and physicochemical properties were retrieved from the PubChem compound database (Kim et al., 2023). 2D structure depictions, substructure alerts, and Crippen logP descriptors were computed using RDKit.js MinimalLib (Landrum et al., 2024). 3D molecular conformations were visualized using 3Dmol.js (Rego &amp; Koes, 2015).
+        </p>
+        <button type="button" class="ghost" id="btn-modal-cite" style="margin-top:6px;font-size:13px">📋 Copy Citation Text</button>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+/**
+ * Cheminformatics Explorer v1.0.0
+ * Client-side chemistry explorer powered by PubChem, RDKit.js, 3Dmol.js & JSME
+ */
+
+const API = "https://pubchem.ncbi.nlm.nih.gov/rest/pug";
+const PROPS = "Title,MolecularFormula,MolecularWeight,ExactMass,IUPACName,SMILES,InChIKey,XLogP,TPSA,HBondDonorCount,HBondAcceptorCount,RotatableBondCount,Complexity,Charge,HeavyAtomCount,ConformerCount3D";
+const $ = s => document.querySelector(s);
+
+let viewer = null;
+let cur = null;
+let cmp = null;
+let sdf = "";
+let style = "bs";
+let tab = "ov";
+let history = [];
+let currentSearchId = 0;
+
+try {
+  history = JSON.parse(localStorage.getItem("cx-hist") || "[]");
+} catch(e) {
+  history = [];
+}
+
+const prefersReducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+if (prefersReducedMotion) {
+  $("#spin")?.setAttribute("aria-pressed", "false");
+}
+
+/* ==========================================================================
+   Rate-limited Request Queue with SessionStorage Caching and Backoff
+   - Rate limit: 3 requests per second (minIntervalMs: 334ms)
+   - Caching: sessionStorage for 24 hours (86,400,000 ms)
+   - Cancel stale requests on new search
+   - Max retries: 2 with exponential backoff on 429/503
+   - Friendly "Service busy, retrying..." message
+   ========================================================================== */
+class RequestQueue {
+  constructor(minIntervalMs = 334) {
+    this.minIntervalMs = minIntervalMs;
+    this.queue = [];
+    this.processing = false;
+    this.lastRequestTime = 0;
+    this.cache = new Map();
+    this.inflight = new Map();
+  }
+
+  cancelPending() {
+    while (this.queue.length > 0) {
+      const item = this.queue.shift();
+      if (item && item.reject) {
+        const err = new Error("Request cancelled by new search.");
+        err.cancelled = true;
+        item.reject(err);
+      }
+    }
+  }
+
+  getFromSession(url) {
+    try {
+      const item = sessionStorage.getItem("cx_cache_" + url);
+      if (!item) return null;
+      const parsed = JSON.parse(item);
+      if (Date.now() - parsed.t < 24 * 60 * 60 * 1000) {
+        return parsed.d;
+      }
+      sessionStorage.removeItem("cx_cache_" + url);
+    } catch (e) {}
+    return null;
+  }
+
+  saveToSession(url, data) {
+    try {
+      sessionStorage.setItem("cx_cache_" + url, JSON.stringify({ t: Date.now(), d: data }));
+    } catch (e) {}
+  }
+
+  async fetch(url, options = {}, retries = 2) {
+    if (this.cache.has(url)) {
+      return this.cache.get(url);
+    }
+    const sess = this.getFromSession(url);
+    if (sess != null) {
+      this.cache.set(url, sess);
+      return sess;
+    }
+    if (this.inflight.has(url)) {
+      return this.inflight.get(url);
+    }
+
+    const promise = new Promise((resolve, reject) => {
+      this.queue.push({ url, options, retries, resolve, reject });
+      this.process();
+    });
+
+    this.inflight.set(url, promise);
+    try {
+      const res = await promise;
+      this.cache.set(url, res);
+      this.saveToSession(url, res);
+      return res;
+    } finally {
+      this.inflight.delete(url);
+    }
+  }
+
+  async process() {
+    if (this.processing || this.queue.length === 0) return;
+    this.processing = true;
+
+    while (this.queue.length > 0) {
+      const item = this.queue.shift();
+      const elapsed = Date.now() - this.lastRequestTime;
+      if (elapsed < this.minIntervalMs) {
+        await new Promise(r => setTimeout(r, this.minIntervalMs - elapsed));
+      }
+      this.lastRequestTime = Date.now();
+
+      try {
+        const response = await fetch(item.url, item.options);
+
+        // Friendly backoff on HTTP 503 or HTTP 429
+        if ((response.status === 503 || response.status === 429) && item.retries > 0) {
+          const vmsg = $("#vmsg");
+          if (vmsg) {
+            vmsg.textContent = "Service busy, retrying…";
+            vmsg.style.display = "grid";
+          }
+          const delay = (3 - item.retries) * 1500;
+          await new Promise(r => setTimeout(r, delay));
+          this.queue.unshift({ ...item, retries: item.retries - 1 });
+          continue;
+        }
+
+        if (!response.ok) {
+          const err = new Error(`HTTP ${response.status}`);
+          err.status = response.status;
+          item.reject(err);
+          continue;
+        }
+
+        const contentType = response.headers.get("content-type") || "";
+        const data = contentType.includes("application/json") ? await response.json() : await response.text();
+        item.resolve(data);
+      } catch (err) {
+        if (!navigator.onLine) {
+          const netErr = new Error("Network offline: unable to reach PubChem.");
+          netErr.status = 0;
+          item.reject(netErr);
+        } else {
+          item.reject(err);
+        }
+      }
+    }
+
+    this.processing = false;
+  }
+}
+
+const reqQueue = new RequestQueue(334);
+const j = (url, opts, retries = 2) => reqQueue.fetch(url, opts, retries);
+
+/* ==========================================================================
+   Utilities
+   ========================================================================== */
+const num = v => (v == null || v === "" || isNaN(Number(v)) ? null : Number(v));
+const fmt = (v, d = 2) => (v == null ? "n/a" : Number(v).toFixed(d).replace(/\.00$/, ""));
+const sub = f => (f || "").replace(/(\d+)/g, "<sub>$1</sub>");
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({
+  "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+}[c]));
+
+/* ==========================================================================
+   Compound Resolvers & Data Fetchers
+   ========================================================================== */
+async function resolve(rawQuery) {
+  let q = rawQuery.trim().replace(/^["']|["']$/g, "").trim();
+  if (!q) throw new Error("Empty search query. Please enter a compound name, formula, or SMILES.");
+
+  // 1. Direct PubChem CID query (e.g. "CID 2519" or "2519")
+  const cidMatch = q.match(/^(?:CID\s*)?(\d+)$/i);
+  if (cidMatch) {
+    const cid = parseInt(cidMatch[1], 10);
+    return { cid, note: `Loaded directly by PubChem CID ${cid}.` };
+  }
+
+  // 2. Query by Molecular Formula FIRST if it matches formula pattern with digits (e.g. "C6H6", "C8H10N4O2")
+  const isLikelyFormula = /^[A-Z][A-Za-z0-9]*\d[A-Za-z0-9]*$/.test(q);
+  if (isLikelyFormula) {
+    try {
+      const d = await j(`${API}/compound/fastformula/${encodeURIComponent(q)}/cids/JSON`);
+      if (d?.IdentifierList?.CID?.length) {
+        return { cid: d.IdentifierList.CID[0], note: `Closest PubChem match for formula ${q}; multiple isomers may share this formula.` };
+      }
+    } catch (e) {
+      if (e.status === 429 || e.status === 503) throw e;
+    }
+  }
+
+  // 3. Query by chemical SMILES structure
+  let isSmiles = false;
+  if (RDK) {
+    try {
+      const mTest = RDK.get_mol(q);
+      if (mTest) {
+        if (typeof mTest.is_valid === "function" ? mTest.is_valid() : true) {
+          isSmiles = true;
+        }
+        mTest.delete();
+      }
+    } catch (e) {}
+  }
+  if (!isSmiles && /^[A-Za-z0-9@+\-\[\]\(\)\\\/=#$%:.]{3,}$/.test(q) && /[#=\[\]\(\)\\\/]/.test(q)) {
+    isSmiles = true;
+  }
+  if (isSmiles) {
+    try {
+      const d = await j(`${API}/compound/fastidentity/smiles/${encodeURIComponent(q)}/cids/JSON`);
+      if (d?.IdentifierList?.CID?.length) {
+        return { cid: d.IdentifierList.CID[0], note: `Matched by chemical SMILES structure.` };
+      }
+    } catch (e) {
+      if (e.status === 429 || e.status === 503) throw e;
+    }
+  }
+
+  // 4. Query by Compound Name
+  try {
+    const d = await j(`${API}/compound/name/${encodeURIComponent(q)}/cids/JSON`);
+    if (d?.IdentifierList?.CID?.length) {
+      return { cid: d.IdentifierList.CID[0], note: "" };
+    }
+  } catch (e) {
+    try {
+      const cirRes = await fetch(`https://cactus.nci.nih.gov/chemical/structure/${encodeURIComponent(q)}/stdinchikey`);
+      if (cirRes.ok) {
+        const key = (await cirRes.text()).trim();
+        if (key && key.includes("InChIKey=")) {
+          const cleanKey = key.replace("InChIKey=", "").trim();
+          const pkRes = await j(`${API}/compound/inchikey/${encodeURIComponent(cleanKey)}/cids/JSON`);
+          if (pkRes?.IdentifierList?.CID?.length) {
+            return { cid: pkRes.IdentifierList.CID[0], note: "Resolved via NCI CIR chemical identifier service." };
+          }
+        }
+      }
+    } catch (cirErr) {}
+    if (e.status === 429 || e.status === 503) throw e;
+  }
+
+  // 5. Fallback formula search for elemental symbols or formulas without digits
+  if (/^[A-Z][a-z]?$/.test(q) || (/^[A-Za-z0-9]+$/.test(q) && !isLikelyFormula && !/^[a-z]+$/.test(q))) {
+    try {
+      const d = await j(`${API}/compound/fastformula/${encodeURIComponent(q)}/cids/JSON`);
+      if (d?.IdentifierList?.CID?.length) {
+        return { cid: d.IdentifierList.CID[0], note: `Closest PubChem match for formula ${q}; multiple isomers may share this formula.` };
+      }
+    } catch (e) {
+      if (e.status === 429 || e.status === 503) throw e;
+    }
+  }
+
+  throw new Error(`No PubChem match for "${q}". Check the spelling or try a common name, IUPAC name, SMILES, or molecular formula.`);
+}
+
+async function fetchProps(cid) {
+  const d = await j(`${API}/compound/cid/${cid}/property/${PROPS}/JSON`);
+  const p = d.PropertyTable.Properties[0];
+  return {
+    cid,
+    name: p.Title || p.IUPACName || "CID " + cid,
+    formula: p.MolecularFormula,
+    mw: num(p.MolecularWeight),
+    exact: num(p.ExactMass),
+    iupac: p.IUPACName,
+    smiles: p.SMILES || p.IsomericSMILES || p.ConnectivitySMILES || p.CanonicalSMILES || "",
+    key: p.InChIKey,
+    logp: num(p.XLogP),
+    tpsa: num(p.TPSA),
+    hbd: num(p.HBondDonorCount),
+    hba: num(p.HBondAcceptorCount),
+    rot: num(p.RotatableBondCount),
+    cx: num(p.Complexity),
+    charge: num(p.Charge),
+    heavy: num(p.HeavyAtomCount),
+    has3D: (num(p.ConformerCount3D) || 0) > 0
+  };
+}
+
+async function fetchSDF(cid, has3D = true) {
+  const types = has3D ? ["3d", "2d"] : ["2d"];
+  for (const t of types) {
+    try {
+      const text = await j(`${API}/compound/cid/${cid}/record/SDF?record_type=${t}`);
+      if (text && text.includes("$$$$")) {
+        return { sdf: text, dim: t };
+      }
+    } catch (e) {}
+  }
+  return { sdf: null, dim: "none" };
+}
+
+/* ==========================================================================
+   Lazy Tab Data Fetchers (Safety, Similar, Experimental & Bio)
+   ========================================================================== */
+const H_CLASSES = {
+  "H200": "Unst. Expl.", "H201": "Expl. 1.1", "H202": "Expl. 1.2", "H203": "Expl. 1.3", "H204": "Expl. 1.4",
+  "H220": "Flam. Gas 1", "H224": "Flam. Liq. 1", "H225": "Flam. Liq. 2", "H226": "Flam. Liq. 3", "H228": "Flam. Sol. 1/2",
+  "H300": "Acute Tox. 1/2 (oral)", "H301": "Acute Tox. 3 (oral)", "H302": "Acute Tox. 4 (oral)", "H304": "Asp. Tox. 1",
+  "H310": "Acute Tox. 1 (dermal)", "H311": "Acute Tox. 3 (dermal)", "H312": "Acute Tox. 4 (dermal)", "H314": "Skin Corr. 1A/B/C",
+  "H315": "Skin Irrit. 2", "H316": "Skin Irrit. 3", "H317": "Skin Sens. 1", "H318": "Eye Dam. 1", "H319": "Eye Irrit. 2",
+  "H320": "Eye Irrit. 2B", "H330": "Acute Tox. 1/2 (inhal.)", "H331": "Acute Tox. 3 (inhal.)", "H332": "Acute Tox. 4 (inhal.)",
+  "H334": "Resp. Sens. 1", "H335": "STOT SE 3 (respiratory)", "H336": "STOT SE 3 (narcotic)",
+  "H340": "Muta. 1A/B", "H341": "Muta. 2", "H350": "Carc. 1A/B", "H351": "Carc. 2",
+  "H360": "Repr. 1A/B", "H361": "Repr. 2", "H362": "Lact.",
+  "H370": "STOT SE 1", "H371": "STOT SE 2", "H372": "STOT RE 1", "H373": "STOT RE 2",
+  "H400": "Aquatic Acute 1", "H401": "Aquatic Acute 2", "H402": "Aquatic Acute 3",
+  "H410": "Aquatic Chronic 1", "H411": "Aquatic Chronic 2", "H412": "Aquatic Chronic 3", "H413": "Aquatic Chronic 4"
+};
+
+async function ghs(cid) {
+  try {
+    const d = await j(`https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/${cid}/JSON?heading=GHS+Classification`);
+    if (!d || !d.Record) return { isNoData: true };
+
+    const refMap = new Map();
+    (d.Record.Reference || []).forEach(r => refMap.set(r.ReferenceNumber, r));
+
+    function findSections(s) {
+      let list = [];
+      if (s.Information) list.push(...s.Information);
+      for (const sub of (s.Section || [])) list.push(...findSections(sub));
+      return list;
+    }
+
+    const allInfo = findSections(d.Record);
+    const groups = [];
+    const groupMap = new Map();
+
+    allInfo.forEach(info => {
+      const refNum = info.ReferenceNumber;
+      if (!groupMap.has(refNum)) {
+        const ref = refMap.get(refNum);
+        const grp = {
+          refNum,
+          sourceName: ref?.SourceName || ref?.Name || "Supplier Notification",
+          sourceUrl: ref?.URL || "",
+          pics: [],
+          sig: "",
+          st: [],
+          hazardClasses: [],
+          hasPercent: false,
+          summaryText: ""
+        };
+        groupMap.set(refNum, grp);
+        groups.push(grp);
+      }
+      const grp = groupMap.get(refNum);
+
+      const v = (info.Value && info.Value.StringWithMarkup) || [];
+
+      if (info.Name === "Pictogram(s)") {
+        v.forEach(x => {
+          (x.Markup || []).forEach(m => {
+            if (m.URL && !grp.pics.some(p => p.u === m.URL)) {
+              grp.pics.push({ u: m.URL, n: m.Extra || "GHS hazard pictogram" });
+            }
+          });
+        });
+      } else if (info.Name === "Signal" && v[0]?.String) {
+        const s = v[0].String.trim();
+        if (/danger/i.test(s)) grp.sig = "Danger";
+        else if (/warning/i.test(s)) grp.sig = "Warning";
+        else if (s) grp.sig = s;
+      } else if (info.Name === "GHS Hazard Statements") {
+        v.forEach(x => {
+          const raw = (x.String || "").trim();
+          if (!raw) return;
+          grp.st.push(raw);
+          if (/\d+(\.\d+)?%/.test(raw)) grp.hasPercent = true;
+
+          const codeMatch = raw.match(/^(H\d{3}[a-zA-Z]?)/);
+          const code = codeMatch ? codeMatch[1] : "";
+          const pctMatch = raw.match(/\((\d+(\.\d+)?%)\)/);
+          const pct = pctMatch ? pctMatch[1] : "";
+          const bracketMatch = raw.match(/\[(?:Danger|Warning)?\s*([^\]]+)\]/);
+          const bracketClass = bracketMatch ? bracketMatch[1].trim() : "";
+
+          if (pct) {
+            const className = H_CLASSES[code] || bracketClass || code;
+            grp.hazardClasses.push({
+              code,
+              className,
+              percentage: pct,
+              label: `${className}, reported by ${pct} of notifiers`
+            });
+          }
+        });
+      } else if (info.Name === "Note" || info.Name === "ECHA C&L Notifications Summary") {
+        v.forEach(x => {
+          const str = (x.String || "").trim();
+          if (str && !grp.summaryText) grp.summaryText = str;
+          if (/\d+(\.\d+)?%/.test(str)) grp.hasPercent = true;
+        });
+      }
+    });
+
+    if (!groups.length) return { isNoData: true };
+
+    groups.forEach(g => {
+      g.pics.sort((a, b) => (a.n || "").localeCompare(b.n || ""));
+      g.st.sort((a, b) => {
+        const codeA = (a.match(/^H\d{3}[a-zA-Z]?/) || [""])[0];
+        const codeB = (b.match(/^H\d{3}[a-zA-Z]?/) || [""])[0];
+        if (codeA && codeB && codeA !== codeB) {
+          return codeA.localeCompare(codeB, undefined, { numeric: true });
+        }
+        return a.localeCompare(b);
+      });
+      g.hazardClasses.sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true }));
+    });
+
+    let headlineIdx = groups.findIndex(g => {
+      const isEcha = /European Chemicals Agency|ECHA/i.test(g.sourceName);
+      return isEcha && g.hasPercent;
+    });
+    if (headlineIdx === -1) {
+      headlineIdx = groups.findIndex(g => g.hasPercent);
+    }
+    if (headlineIdx === -1) {
+      headlineIdx = 0;
+    }
+
+    const headline = groups[headlineIdx];
+    const others = groups.filter((_, idx) => idx !== headlineIdx);
+
+    const isNotClassified = !headline.sig && (!headline.pics || headline.pics.length === 0) &&
+      (headline.st.length === 0 || headline.st.some(s => /Not Classified/i.test(s)));
+
+    return {
+      isNoData: false,
+      headline,
+      others,
+      isNotClassified,
+      totalGroups: groups.length
+    };
+  } catch (e) {
+    return { isNoData: true };
+  }
+}
+
+async function fetchSimilar(cid) {
+  try {
+    const url = `${API}/compound/fastsimilarity_2d/cid/${cid}/cids/JSON?Threshold=85&MaxRecords=7`;
+    const d = await j(url);
+    const cids = (d?.IdentifierList?.CID || []).filter(c => c !== cid).slice(0, 6);
+    if (!cids.length) return [];
+
+    const props = await j(`${API}/compound/cid/${cids.join(",")}/property/Title,ConnectivitySMILES,CanonicalSMILES/JSON`);
+    return (props?.PropertyTable?.Properties || []).map(p => ({
+      cid: p.CID,
+      name: p.Title || `CID ${p.CID}`,
+      smiles: p.ConnectivitySMILES || p.CanonicalSMILES || p.IsomericSMILES || ""
+    }));
+  } catch (e) {
+    return [];
+  }
+}
+
+async function fetchExperimental(cid) {
+  const out = [];
+  try {
+    const url = `https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/${cid}/JSON?heading=Experimental+Properties`;
+    const d = await j(url);
+    const refMap = new Map();
+    (d?.Record?.Reference || []).forEach(r => {
+      refMap.set(r.ReferenceNumber, r.SourceName || r.Name || "PubChem PUG View");
+    });
+
+    const targets = ["Melting Point", "Boiling Point", "Solubility", "Density"];
+    const found = new Set();
+
+    const walk = s => {
+      if (!s) return;
+      if (targets.includes(s.TOCHeading) && s.Information) {
+        s.Information.forEach(i => {
+          const val = i.Value?.StringWithMarkup?.[0]?.String || (i.Value?.Number != null ? String(i.Value.Number[0]) : null);
+          if (val && !found.has(s.TOCHeading)) {
+            found.add(s.TOCHeading);
+            out.push({
+              name: s.TOCHeading,
+              val: String(val).trim(),
+              source: refMap.get(i.ReferenceNumber) || "PubChem PUG View"
+            });
+          }
+        });
+      }
+      if (s.Section) s.Section.forEach(walk);
+    };
+
+    if (d?.Record) walk(d.Record);
+  } catch (e) {}
+  return out;
+}
+
+async function fetchBioContext(cid, inchiKey) {
+  const out = { chebiId: null, chemblId: null, roles: [], chembl: null };
+  try {
+    const xrefs = await j(`${API}/compound/cid/${cid}/xrefs/RegistryID/JSON`);
+    const ids = xrefs?.InformationList?.Information?.[0]?.RegistryID || [];
+    out.chebiId = ids.find(x => x.startsWith("CHEBI:")) || null;
+    out.chemblId = ids.find(x => x.startsWith("CHEMBL")) || null;
+  } catch (e) {}
+
+  const tasks = [];
+  if (out.chebiId) {
+    tasks.push((async () => {
+      try {
+        const url = `https://www.ebi.ac.uk/ols4/api/ontologies/chebi/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252F${out.chebiId.replace(':', '_')}/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FRO_0000087`;
+        const res = await j(url);
+        out.roles = (res?._embedded?.terms || []).map(t => t.label).slice(0, 8);
+      } catch (e) {}
+    })());
+  }
+
+  if (inchiKey) {
+    tasks.push((async () => {
+      try {
+        const url = `https://www.ebi.ac.uk/chembl/api/data/molecule/${encodeURIComponent(inchiKey)}.json`;
+        const res = await j(url);
+        if (res && res.molecule_chembl_id) {
+          out.chemblId = out.chemblId || res.molecule_chembl_id;
+          out.chembl = {
+            id: res.molecule_chembl_id,
+            prefName: res.pref_name,
+            maxPhase: res.max_phase,
+            type: res.molecule_type
+          };
+        }
+      } catch (e) {}
+    })());
+  }
+
+  await Promise.all(tasks);
+  return out;
+}
+
+/* ==========================================================================
+   Lazy RDKit.js Integration & SMARTS Matching
+   Loaded only when Structure, Drug-likeness, or Similar tab is opened.
+   ========================================================================== */
+let RDK = null;
+let rdkitStatus = "idle"; // 'idle' | 'loading' | 'ready' | 'failed'
+let rdkitPromise = null;
+const RV_CDN = "https://cdn.jsdelivr.net/npm/@rdkit/rdkit@2024.3.5-1.0.0/dist/";
+const RV_FALLBACK = "https://unpkg.com/@rdkit/rdkit@2024.3.5-1.0.0/dist/";
+
+function ensureRDKit() {
+  if (RDK) return Promise.resolve(RDK);
+  if (rdkitPromise) return rdkitPromise;
+  rdkitStatus = "loading";
+
+  rdkitPromise = new Promise(resolve => {
+    function loadScript(base) {
+      const sc = document.createElement("script");
+      sc.src = base + "RDKit_minimal.js";
+      sc.async = true;
+      sc.onload = () => {
+        if (typeof initRDKitModule === "function") {
+          initRDKitModule({ locateFile: f => base + f })
+            .then(m => {
+              RDK = m;
+              window.RDK = m;
+              rdkitStatus = "ready";
+              resolve(m);
+              if (cur && (tab === "st" || tab === "dd" || tab === "sm")) {
+                render();
+              }
+            })
+            .catch(err => {
+              console.warn("RDKit WASM initialization error:", err);
+              if (base === RV_CDN) loadScript(RV_FALLBACK);
+              else {
+                rdkitStatus = "failed";
+                resolve(null);
+                if (cur && (tab === "st" || tab === "dd" || tab === "sm")) render();
+              }
+            });
+        } else {
+          if (base === RV_CDN) loadScript(RV_FALLBACK);
+          else {
+            rdkitStatus = "failed";
+            resolve(null);
+            if (cur && (tab === "st" || tab === "dd" || tab === "sm")) render();
+          }
+        }
+      };
+      sc.onerror = () => {
+        if (base === RV_CDN) loadScript(RV_FALLBACK);
+        else {
+          rdkitStatus = "failed";
+          resolve(null);
+          if (cur && (tab === "st" || tab === "dd" || tab === "sm")) render();
+        }
+      };
+      document.head.appendChild(sc);
+    }
+    loadScript(RV_CDN);
+  });
+  return rdkitPromise;
+}
+
+const FG = {
+  "Carboxylic acid": "[CX3](=O)[OX2H1,OX1-]",
+  "Ester": "[#6][CX3](=O)[OX2H0][#6]",
+  "Amide": "[NX3][CX3](=[OX1])[#6]",
+  "Amine": "[NX3;H2,H1;!$(NC=O)]",
+  "Alcohol": "[CX4][OX2H]",
+  "Phenol": "c[OX2H]",
+  "Ketone": "[#6][CX3](=O)[#6]",
+  "Aldehyde": "[CX3H1](=O)[#6]",
+  "Ether": "[OD2]([#6])[#6]",
+  "Halide": "[F,Cl,Br,I]",
+  "Nitro": "[N+](=O)[O-]",
+  "Nitrile": "C#N",
+  "Thiol": "[SX2H]",
+  "Sulfonamide": "S(=O)(=O)N",
+  "Aromatic atoms": "a"
+};
+
+function match(m, sma) {
+  if (!RDK || !m) return { atoms: [], bonds: [], n: 0 };
+  let q = null;
+  try {
+    q = RDK.get_qmol(sma);
+    if (!q) return { atoms: [], bonds: [], n: 0 };
+    const r = JSON.parse(m.get_substruct_matches(q));
+    return {
+      atoms: [...new Set(r.flatMap(x => x.atoms || []))],
+      bonds: [...new Set(r.flatMap(x => x.bonds || []))],
+      n: r.length
+    };
+  } catch (e) {
+    return { atoms: [], bonds: [], n: 0 };
+  } finally {
+    if (q) q.delete();
+  }
+}
+
+function drawMol(smi, hl) {
+  if (!RDK || !smi) return "";
+  let m = null;
+  try {
+    m = RDK.get_mol(smi);
+    if (!m) return "<p style='color:var(--mute)'>Invalid or unparseable SMILES structure.</p>";
+    const o = { width: 440, height: 280, clearBackground: true };
+    if (hl && hl.atoms && hl.atoms.length) {
+      o.atoms = hl.atoms;
+      o.bonds = hl.bonds || [];
+      o.highlightColour = [0.76, 0.15, 0.36];
+    }
+    return m.get_svg_with_highlights(JSON.stringify(o));
+  } catch (e) {
+    return "<p style='color:var(--mute)'>Structure depiction could not be rendered.</p>";
+  } finally {
+    if (m) m.delete();
+  }
+}
+
+function drawThumbnail(smi) {
+  if (!RDK || !smi) return "";
+  let m = null;
+  try {
+    m = RDK.get_mol(smi);
+    if (!m) return "";
+    return m.get_svg(110, 75);
+  } catch (e) {
+    return "";
+  } finally {
+    if (m) m.delete();
+  }
+}
+
+const STRUCTURAL_ALERTS = [
+  { name: "Quinone", type: "PAINS", smarts: "[#6]1(=[OX1])[#6]=[#6][#6](=[OX1])[#6]=[#6]1", desc: "Redox-active / reactive quinone core (promiscuous assay interference)" },
+  { name: "Catechol", type: "PAINS", smarts: "c1c([OX2H])c([OX2H])ccc1", desc: "Easily auto-oxidizes to reactive ortho-quinones" },
+  { name: "Michael Acceptor", type: "Brenk", smarts: "[#6]=[#6]-[#6](=[OX1])", desc: "Electrophilic alpha,beta-unsaturated carbonyl (covalent modifier)" },
+  { name: "Rhodanine", type: "PAINS", smarts: "O=C1CSC(=S)N1", desc: "Frequent assay aggregator / heavy metal chelator" },
+  { name: "Epoxide", type: "Brenk", smarts: "[#6]1[#6]O1", desc: "Strained electrophilic 3-membered ether (DNA/protein alkylation)" },
+  { name: "Aliphatic Halide", type: "Brenk", smarts: "[CX4][Cl,Br,I]", desc: "Reactive aliphatic alkylating agent" },
+  { name: "Nitroso", type: "Brenk", smarts: "[#6][N;X2]=O", desc: "Potential genotoxic / DNA-reactive metabolite precursor" },
+  { name: "Hydrazine", type: "Brenk", smarts: "[NX3][NX3]", desc: "Reactive hydrazine / hydrazide motif" }
+];
+
+function checkStructuralAlerts(smi) {
+  if (!RDK || !smi) return [];
+  let m = null;
+  const hits = [];
+  try {
+    m = RDK.get_mol(smi);
+    if (!m) return [];
+    for (const a of STRUCTURAL_ALERTS) {
+      let q = null;
+      try {
+        q = RDK.get_qmol(a.smarts);
+        if (q) {
+          const r = JSON.parse(m.get_substruct_matches(q));
+          if (r && r.length > 0) {
+            hits.push({ ...a, count: r.length });
+          }
+        }
+      } catch (e) {}
+      finally {
+        if (q) q.delete();
+      }
+    }
+  } catch (e) {}
+  finally {
+    if (m) m.delete();
+  }
+  return hits;
+}
+
+function crip(p) {
+  if (!p.smiles) return "";
+  if (!RDK) {
+    return `<div class="stat"><span style="color:var(--mute)">Initializing RDKit descriptors…</span></div>`;
+  }
+  let m = null;
+  try {
+    m = RDK.get_mol(p.smiles);
+    if (!m) return "";
+    const d = JSON.parse(m.get_descriptors());
+    const isStudent = (mode === "student");
+    return `
+      <div class="stat">
+        <span>${isStudent ? "XLogP3 (PubChem)" : "XLogP3-AA"}: <b>${fmt(p.logp, 2)}</b> <span class="provenance-tag">computed</span></span>
+        <span>${isStudent ? "Crippen logP (RDKit)" : "Crippen ClogP"}: <b>${fmt(d.CrippenClogP, 2)}</b> <span class="provenance-tag">computed</span></span>
+        <span>${isStudent ? "Fraction sp³ carbons (Fsp3)" : "FractionCSP3"}: <b>${fmt(d.FractionCSP3, 2)}</b> <span class="provenance-tag">computed</span></span>
+        <span>${isStudent ? "Ring Count" : "NumRings"}: <b>${d.NumRings}</b> <span class="provenance-tag">computed</span></span>
+      </div>
+      ${isStudent ? `
+        <p style="color:var(--mute);font-size:13px;line-height:1.45;margin-top:5px">
+          <strong>Student note on LogP:</strong> LogP measures how much a molecule prefers fat over water. Both XLogP3 and Crippen logP are predicted computer estimations. Differences of ~1 unit are common because they use different mathematical models. Fsp3 indicates 3D spatial complexity—higher Fsp3 values often correlate with better drug clinical success!
+        </p>` : `
+        <p style="color:var(--mute);font-size:12.5px;line-height:1.45;margin-top:5px">
+          <strong>Methodology comparison:</strong> XLogP3-AA uses an empirical atom-additive model with calibration factors. Crippen logP computes Wildman-Crippen fragment contributions based on 68 atomic environment types. Neither value is measured; both are predicted descriptors.
+        </p>`}`;
+  } catch (e) {
+    return "";
+  } finally {
+    if (m) m.delete();
+  }
+}
+
+/* ==========================================================================
+   3Dmol Viewer
+   ========================================================================== */
+function initViewer() {
+  const container = $("#view");
+  if (!container || !window.$3Dmol) return;
+  viewer = $3Dmol.createViewer(container, { backgroundColor: "0x0e1a24" });
+}
+
+function applyStyle() {
+  if (!viewer) return;
+  const S = {
+    bs: { stick: { radius: 0.15 }, sphere: { scale: 0.28 } },
+    st: { stick: { radius: 0.22 } },
+    sp: { sphere: { scale: 0.95 } }
+  };
+  viewer.setStyle({}, S[style] || S.bs);
+  viewer.render();
+}
+
+function show(sdfText, dim = "3d") {
+  if (!viewer) return;
+  viewer.clear();
+  $("#vmsg").style.display = "none";
+  const badge = $("#vbadge");
+
+  if (!sdfText) {
+    badge.textContent = "No coordinates available";
+    $("#vmsg").textContent = "No 3D or 2D coordinate file available in PubChem for this compound.";
+    $("#vmsg").style.display = "grid";
+    viewer.render();
+    return;
+  }
+
+  if (dim === "3d") {
+    badge.textContent = "3D Conformer (computed)";
+  } else {
+    badge.textContent = "2D Layout (no 3D record in PubChem)";
+  }
+
+  viewer.addModel(sdfText, "sdf");
+  applyStyle();
+  viewer.zoomTo();
+  
+  const spinBtn = $("#spin");
+  const shouldSpin = spinBtn.getAttribute("aria-pressed") === "true" && !prefersReducedMotion;
+  viewer.spin(shouldSpin ? "y" : false);
+  viewer.render();
+}
+
+/* ==========================================================================
+   Main Search Flow & Loading States
+   ========================================================================== */
+async function explore(rawQuery) {
+  let q = (rawQuery || "").trim().replace(/^["']|["']$/g, "").trim();
+  if (!q) {
+    renderEmptyState();
+    return;
+  }
+
+  if (q.length > 150) {
+    $("#pane").innerHTML = `
+      <div class="notice notice-warn">
+        <h3>Query Too Long</h3>
+        <p>Search query exceeds 150 characters. Please provide a concise compound name, formula, or SMILES string.</p>
+      </div>`;
+    return;
+  }
+
+  const thisSearchId = ++currentSearchId;
+  reqQueue.cancelPending();
+
+  const searchBtn = $("#search-btn");
+  if (searchBtn) searchBtn.disabled = true;
+
+  $("#pane").innerHTML = `
+    <div class="loading-box skeleton-container" role="status" aria-label="Loading compound analysis">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div class="spinner" aria-hidden="true"></div>
+        <div>
+          <div style="font-weight:600;font-size:14.5px">Querying PubChem for &ldquo;${esc(q)}&rdquo;…</div>
+          <div style="font-size:12.5px;color:var(--mute)">Retrieving 3D conformer, physical properties, and molecular identifiers</div>
+        </div>
+      </div>
+      <div class="skeleton-title"></div>
+      <div class="skeleton-subtitle"></div>
+      <div class="skeleton-card">
+        <div class="skeleton-line" style="width:75%"></div>
+        <div class="skeleton-line" style="width:90%"></div>
+        <div class="skeleton-line" style="width:60%"></div>
+      </div>
+      <div class="skeleton-grid">
+        <div class="skeleton-cell"><div class="skeleton-line" style="width:50%"></div><div class="skeleton-line" style="width:85%;height:18px"></div></div>
+        <div class="skeleton-cell"><div class="skeleton-line" style="width:50%"></div><div class="skeleton-line" style="width:85%;height:18px"></div></div>
+        <div class="skeleton-cell"><div class="skeleton-line" style="width:50%"></div><div class="skeleton-line" style="width:85%;height:18px"></div></div>
+        <div class="skeleton-cell"><div class="skeleton-line" style="width:50%"></div><div class="skeleton-line" style="width:85%;height:18px"></div></div>
+      </div>
+    </div>`;
+
+  $("#vmsg").style.display = "grid";
+  $("#vmsg").textContent = `Fetching coordinates for "${q}"…`;
+  $("#vbadge").textContent = "Fetching…";
+
+  try {
+    const { cid, note } = await resolve(q);
+    if (thisSearchId !== currentSearchId) return;
+
+    // Fetch ONLY what Overview needs
+    const [p, s, synRes, descRes] = await Promise.all([
+      fetchProps(cid),
+      fetchSDF(cid),
+      j(`${API}/compound/cid/${cid}/synonyms/JSON`).catch(() => null),
+      j(`https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/${cid}/JSON?heading=Record+Description`).catch(() => null)
+    ]);
+    if (thisSearchId !== currentSearchId) return;
+
+    const syn = (synRes?.InformationList?.Information?.[0]?.Synonym || []).slice(0, 12);
+    const desc = [];
+    const walk = n => {
+      if (!n) return;
+      (n.Information || []).forEach(i => {
+        const str = i.Value?.StringWithMarkup?.[0]?.String;
+        if (str && str.length > 40) desc.push(str);
+      });
+      (n.Section || []).forEach(walk);
+    };
+    if (descRes?.Record) walk(descRes.Record);
+
+    cur = {
+      ...p,
+      note,
+      dim: s.dim,
+      syn,
+      desc: desc.slice(0, 2),
+      ghs: null,
+      ghsLoaded: false,
+      showAllHazards: false,
+      similar: null,
+      similarLoaded: false,
+      exp: null,
+      bio: null,
+      expBioLoaded: false
+    };
+
+    sdf = s.sdf || "";
+    show(sdf, s.dim);
+
+    history = [{ q: p.name, cid }, ...history.filter(h => h.cid !== cid)].slice(0, 8);
+    try {
+      localStorage.setItem("cx-hist", JSON.stringify(history));
+    } catch (e) {}
+
+    location.hash = encodeURIComponent(p.name);
+    renderHist();
+    render();
+  } catch (err) {
+    if (err.cancelled || thisSearchId !== currentSearchId) return;
+    let title = "Search Error";
+    let message = esc(err.message || "An unexpected error occurred while querying PubChem.");
+    let type = "notice-err";
+
+    if (err.status === 0 || !navigator.onLine) {
+      title = "Network Offline";
+      message = "Unable to reach PubChem servers. Please check your internet connection.";
+    } else if (err.status === 429 || err.status === 503) {
+      title = "Service Busy";
+      message = "The chemical data service is temporarily busy. Please wait a moment and try again.";
+      type = "notice-warn";
+    }
+
+    $("#pane").innerHTML = `
+      <div class="notice ${type}">
+        <h3>${title}</h3>
+        <p>${message}</p>
+      </div>`;
+    $("#vmsg").textContent = "Search failed.";
+    $("#vbadge").textContent = "Standby";
+  } finally {
+    if (thisSearchId === currentSearchId && searchBtn) {
+      searchBtn.disabled = false;
+    }
+  }
+}
+
+/* ==========================================================================
+   Oral Drug-likeness Rules (Lipinski 2001 & Veber 2002)
+   ========================================================================== */
+function rules(p) {
+  return [
+    { k: "Molecular weight", v: p.mw, max: 500, u: "Da", src: "Lipinski (2001)", type: "computed" },
+    { k: "LogP (XLogP3-AA)", v: p.logp, max: 5, u: "", src: "Lipinski (2001)", type: "computed" },
+    { k: "H-bond donors", v: p.hbd, max: 5, u: "", src: "Lipinski (2001)", type: "computed" },
+    { k: "H-bond acceptors", v: p.hba, max: 10, u: "", src: "Lipinski (2001)", type: "computed" },
+    { k: "Polar surface area (TPSA)", v: p.tpsa, max: 140, u: "Å²", src: "Veber (2002)", type: "computed" },
+    { k: "Rotatable bonds", v: p.rot, max: 10, u: "", src: "Veber (2002)", type: "computed" }
+  ];
+}
+
+const viol = p => rules(p).filter(r => r.v != null && r.v > r.max).length;
+
+/* ==========================================================================
+   Learning Layer State & Helpers
+   ========================================================================== */
+let mode = localStorage.getItem("cx-mode") || "student";
+
+function setMode(newMode) {
+  mode = newMode;
+  try { localStorage.setItem("cx-mode", mode); } catch (e) {}
+  document.querySelectorAll(".mode-toggle button").forEach(b => {
+    const isMatch = b.dataset.mode === mode;
+    b.classList.toggle("active", isMatch);
+    b.setAttribute("aria-checked", isMatch ? "true" : "false");
+  });
+  render();
+}
+
+function copyCitation(btn) {
+  const text = "Chemical structures and physicochemical properties were retrieved from the PubChem compound database (Kim et al., 2023). 2D structure depictions, substructure alerts, and Crippen logP descriptors were computed using RDKit.js MinimalLib (Landrum et al., 2024). 3D molecular conformations were visualized using 3Dmol.js (Rego & Koes, 2015).";
+  const orig = btn.textContent;
+  const done = () => {
+    btn.textContent = "✓ Citation Copied!";
+    setTimeout(() => { btn.textContent = orig; }, 2500);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, btn, "✓ Citation Copied!"));
+  } else {
+    fallbackCopy(text, btn, "✓ Citation Copied!");
+  }
+}
+
+function getStudentComparisonSummary(p, cmp) {
+  if (!p || !cmp) return "";
+  const mwDiff = cmp.mw - p.mw;
+  const logpDiff = cmp.logp - p.logp;
+  const tpsaDiff = cmp.tpsa - p.tpsa;
+  const violP = viol(p);
+  const violCmp = viol(cmp);
+
+  const parts = [];
+  if (Math.abs(mwDiff) > 10) {
+    parts.push(`${cmp.name} is ${mwDiff > 0 ? "heavier" : "lighter"} (${fmt(Math.abs(mwDiff), 1)} g/mol difference) than ${p.name}`);
+  }
+  if (Math.abs(logpDiff) > 0.5) {
+    parts.push(`is ${logpDiff > 0 ? "more lipophilic (fat-soluble)" : "more hydrophilic (water-soluble)"}`);
+  }
+  if (Math.abs(tpsaDiff) > 15) {
+    parts.push(`has ${tpsaDiff > 0 ? "greater polar surface area" : "less polar surface area"}`);
+  }
+  if (violP !== violCmp) {
+    parts.push(`has ${violCmp} Lipinski violation(s) compared to ${violP} for ${p.name}`);
+  }
+  return parts.length ? parts.join(", and ") + "." : `${p.name} and ${cmp.name} have closely matched physicochemical descriptor profiles.`;
+}
+
+// 2D Structure Drawer (JSME) Management
+let jsmeApplet = null;
+let jsmeLoading = false;
+
+function toggleDrawer(open) {
+  const box = $("#drawer-box");
+  const btn = $("#btn-draw");
+  const shouldOpen = open !== undefined ? open : (box.hidden || box.hasAttribute("hidden"));
+  if (shouldOpen) {
+    box.removeAttribute("hidden");
+    box.hidden = false;
+    btn.setAttribute("aria-expanded", "true");
+    initJsme();
+  } else {
+    box.setAttribute("hidden", "");
+    box.hidden = true;
+    btn.setAttribute("aria-expanded", "false");
+  }
+}
+
+function initJsme() {
+  if (jsmeApplet) return;
+  if (window.JSApplet && window.JSApplet.JSME) {
+    createJsmeApplet();
+    return;
+  }
+  if (jsmeLoading) return;
+  jsmeLoading = true;
+
+  window.jsmeOnLoad = function() {
+    jsmeLoading = false;
+    createJsmeApplet();
+  };
+
+  const sc = document.createElement("script");
+  sc.src = "https://unpkg.com/jsme@2017.2.26/jsme/jsme.nocache.js";
+  sc.async = true;
+  sc.onerror = () => {
+    jsmeLoading = false;
+    const loadingEl = $("#jsme-loading");
+    if (loadingEl) loadingEl.textContent = "Failed to load 2D sketcher. Please check internet connection.";
+  };
+  document.head.appendChild(sc);
+}
+
+function createJsmeApplet() {
+  const container = $("#jsme-applet-container");
+  if (!container) return;
+  container.innerHTML = '<div id="jsme_canvas"></div>';
+  try {
+    jsmeApplet = new JSApplet.JSME("jsme_canvas", "380px", "300px");
+    if (cur && cur.smiles) {
+      jsmeApplet.readGenericMolecularInput(cur.smiles);
+    }
+  } catch (e) {
+    console.warn("JSME initialization error:", e);
+  }
+}
+
+/* ==========================================================================
+   Lazy Tab Data Triggers
+   ========================================================================== */
+async function ensureSafety(cid) {
+  if (!cur || cur.cid !== cid || cur.ghsLoaded) return;
+  try {
+    const data = await ghs(cid);
+    if (cur && cur.cid === cid) {
+      cur.ghs = data;
+      cur.ghsLoaded = true;
+      if (tab === "sf") render();
+    }
+  } catch (e) {
+    if (cur && cur.cid === cid) {
+      cur.ghs = { isNoData: true };
+      cur.ghsLoaded = true;
+      if (tab === "sf") render();
+    }
+  }
+}
+
+async function ensureSimilar(cid) {
+  if (!cur || cur.cid !== cid || cur.similarLoaded) return;
+  try {
+    const data = await fetchSimilar(cid);
+    if (cur && cur.cid === cid) {
+      cur.similar = data;
+      cur.similarLoaded = true;
+      if (tab === "sm") render();
+    }
+  } catch (e) {
+    if (cur && cur.cid === cid) {
+      cur.similar = [];
+      cur.similarLoaded = true;
+      if (tab === "sm") render();
+    }
+  }
+}
+
+async function ensureExpBio(cid, key) {
+  if (!cur || cur.cid !== cid || cur.expBioLoaded) return;
+  try {
+    const [exp, bio] = await Promise.all([
+      fetchExperimental(cid),
+      fetchBioContext(cid, key)
+    ]);
+    if (cur && cur.cid === cid) {
+      cur.exp = exp;
+      cur.bio = bio;
+      cur.expBioLoaded = true;
+      if (tab === "ex") render();
+    }
+  } catch (e) {
+    if (cur && cur.cid === cid) {
+      cur.exp = [];
+      cur.bio = { roles: [], chebiId: null, chemblId: null };
+      cur.expBioLoaded = true;
+      if (tab === "ex") render();
+    }
+  }
+}
+
+function switchTab(newTab) {
+  tab = newTab;
+  render();
+  if (cur) {
+    if (tab === "st" || tab === "dd") {
+      ensureRDKit();
+    } else if (tab === "sf" && !cur.ghsLoaded) {
+      ensureSafety(cur.cid);
+    } else if (tab === "sm") {
+      ensureRDKit();
+      if (!cur.similarLoaded) ensureSimilar(cur.cid);
+    } else if (tab === "ex" && !cur.expBioLoaded) {
+      ensureExpBio(cur.cid, cur.key);
+    }
+  }
+}
+
+function toggleHazardStatements() {
+  if (cur) {
+    cur.showAllHazards = !cur.showAllHazards;
+    render();
+  }
+}
+window.toggleHazardStatements = toggleHazardStatements;
+
+/* ==========================================================================
+   View Rendering
+   ========================================================================== */
+function renderEmptyState() {
+  const pane = $("#pane");
+  if (!pane) return;
+  const isStudent = (mode === "student");
+  pane.innerHTML = `
+    <div class="empty-state">
+      <div class="empty-badge" aria-hidden="true">⚗️</div>
+      <h2 class="empty-title">Explore Chemical Space</h2>
+      <p class="empty-desc">
+        ${isStudent
+          ? "Search any chemical compound name, formula, or SMILES to explore interactive 3D molecular conformations, learn about functional groups, and check oral drug-likeness rules."
+          : "Interactive cheminformatics workbench powered by PubChem PUG REST/View, RDKit WASM MinimalLib, and 3Dmol.js. Query over 115 million chemical records with validated provenance."}
+      </p>
+
+      <div class="empty-grid">
+        <div class="empty-card">
+          <div class="empty-card-title">🔬 3D &amp; 2D Structures</div>
+          <p>Real-time 3D conformers with style selection and spin control alongside RDKit 2D vector depictions and functional group highlights.</p>
+        </div>
+        <div class="empty-card">
+          <div class="empty-card-title">💊 Drug-likeness &amp; Rules</div>
+          <p>Lipinski Rule of 5 and Veber oral bioavailability screening, Crippen logP vs XLogP3-AA, and PAINS / Brenk structural alerts.</p>
+        </div>
+        <div class="empty-card">
+          <div class="empty-card-title">🛡️ GHS Safety Hazards</div>
+          <p>Aggregated chemical supplier safety data with GHS hazard pictograms, signal words, and laboratory PPE guidance.</p>
+        </div>
+        <div class="empty-card">
+          <div class="empty-card-title">✏️ Chemical Sketcher</div>
+          <p>Direct chemical SMILES query input or draw custom 2D molecules in the integrated JSME chemical sketcher drawer.</p>
+        </div>
+      </div>
+
+      <div class="empty-quickstart">
+        <span style="font-weight:600;font-size:13px;color:var(--mute)">Quick examples:</span>
+        <div class="empty-chips">
+          <button type="button" class="ghost" data-q="caffeine">☕ Caffeine</button>
+          <button type="button" class="ghost" data-q="aspirin">💊 Aspirin</button>
+          <button type="button" class="ghost" data-q="glucose">🍬 Glucose</button>
+          <button type="button" class="ghost" data-q="ibuprofen">🩹 Ibuprofen</button>
+          <button type="button" class="ghost" data-q="penicillin G">🦠 Penicillin G</button>
+          <button type="button" class="ghost" data-q="benzene">⬡ Benzene</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function render() {
+  const p = cur;
+  if (!p) {
+    renderEmptyState();
+    return;
+  }
+
+  const isStudent = (mode === "student");
+
+  document.querySelectorAll(".tabs button").forEach(b => {
+    const isSel = b.dataset.t === tab;
+    b.setAttribute("aria-selected", isSel ? "true" : "false");
+    b.setAttribute("tabindex", isSel ? "0" : "-1");
+  });
+
+  const pane = $("#pane");
+  pane.setAttribute("aria-labelledby", "tab-" + tab);
+
+  let h = "";
+
+  // 1. Overview Tab
+  if (tab === "ov") {
+    h = `
+      <h2>${esc(p.name)}</h2>
+      <div class="formula">${sub(esc(p.formula))}</div>
+      ${p.note ? `<p style="color:var(--mute);font-size:14px;margin:4px 0 10px">${esc(p.note)}</p>` : ""}
+
+      ${isStudent ? `
+        <div class="edu-callout">
+          <strong>🎓 Student Guide: Molecular Overview &amp; Fundamentals</strong>
+          <p style="margin:4px 0 0">
+            Molecules are defined by their 3D shape, atomic composition, and physical properties. 
+            <strong>Formula</strong> indicates the exact atomic composition. 
+            <strong>Molar mass</strong> is the weight of one mole ($6.022 \\times 10^{23}$ molecules). 
+            <strong>Formal charge</strong> indicates net electrical charge; neutral molecules cross biological membranes much faster than charged ions. 
+            <strong>Bertz complexity</strong> measures how structurally intricate and branched the atomic connectivity is.
+          </p>
+        </div>` : `
+        <div class="researcher-spec">
+          <strong>🔬 Researcher Specifications &amp; Structural Descriptors</strong>
+          <div style="margin-top:6px;display:grid;grid-template-columns:130px 1fr;gap:4px 12px;font-size:12px">
+            <span style="color:var(--mute)">Canonical SMILES:</span> <code style="word-break:break-all">${esc(p.smiles || "n/a")}</code>
+            <span style="color:var(--mute)">InChIKey:</span> <code style="word-break:break-all">${esc(p.key || "n/a")}</code>
+            <span style="color:var(--mute)">IUPAC Name:</span> <span>${esc(p.iupac || "n/a")}</span>
+            <span style="color:var(--mute)">Monoisotopic Mass:</span> <span>${fmt(p.exact, 4)} Da</span>
+            <span style="color:var(--mute)">Topological Index:</span> <span>Bertz Complexity $C(G) = ${fmt(p.cx, 0)}</span>
+            <span style="color:var(--mute)">Coordinate Record:</span> <span>${p.dim === "3d" ? "Computed 3D Conformer" : "2D Coordinate Layout"} (PubChem CID ${p.cid})</span>
+          </div>
+        </div>`}
+
+      ${p.desc.map(d => `<p class="desc">${esc(d)}</p>`).join("")}
+
+      <!-- Basic Descriptors List -->
+      <dl>
+        <dt>Molar mass</dt>
+        <dd>${fmt(p.mw)} g/mol <span class="provenance-tag">computed (PubChem)</span>${isStudent ? `<small style="display:block;color:var(--mute);font-size:12px">Weight of 1 mole; used for calculating concentrations and lab dosages.</small>` : ""}</dd>
+        <dt>Exact mass</dt>
+        <dd>${fmt(p.exact, 4)} Da <span class="provenance-tag">computed (PubChem)</span>${isStudent ? `<small style="display:block;color:var(--mute);font-size:12px">Monoisotopic mass based on most abundant isotopes ($^{12}\\text{C}$, $^{1}\\text{H}$, $^{16}\\text{O}$); used in mass spectrometry.</small>` : ""}</dd>
+        <dt>Heavy atoms</dt>
+        <dd>${p.heavy != null ? p.heavy : "n/a"} <span class="provenance-tag">computed</span>${isStudent ? `<small style="display:block;color:var(--mute);font-size:12px">Count of non-hydrogen atoms forming the core skeleton.</small>` : ""}</dd>
+        <dt>Formal charge</dt>
+        <dd>${p.charge != null ? p.charge : "0"} <span class="provenance-tag">computed</span>${isStudent ? `<small style="display:block;color:var(--mute);font-size:12px">Net electrical charge; neutral molecules cross cell membranes much faster than charged ions.</small>` : ""}</dd>
+        <dt>Complexity</dt>
+        <dd>${fmt(p.cx, 0)} <span class="provenance-tag">computed (Bertz)</span>${isStudent ? `<small style="display:block;color:var(--mute);font-size:12px">Bertz index: higher numbers mean more rings, branching, and heteroatoms.</small>` : ""}</dd>
+        <dt>IUPAC name</dt>
+        <dd>${esc(p.iupac || "n/a")}</dd>
+        <dt>SMILES</dt>
+        <dd class="smi">${esc(p.smiles || "n/a")}</dd>
+        <dt>InChIKey</dt>
+        <dd class="smi">${esc(p.key || "n/a")}</dd>
+        <dt>PubChem Record</dt>
+        <dd>
+          <a href="https://pubchem.ncbi.nlm.nih.gov/compound/${p.cid}" target="_blank" rel="noopener noreferrer">CID ${p.cid}</a>
+          · ${p.dim === "3d" ? "3D conformer record" : (p.dim === "2d" ? "2D layout only (no 3D conformer)" : "No coordinate file")}
+        </dd>
+      </dl>
+
+      <!-- Quick Exploration Navigation Cards -->
+      <div style="margin-top:20px;border-top:1px solid var(--line);padding-top:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
+        <div class="empty-card" role="button" tabindex="0" onclick="switchTab('sf')" style="cursor:pointer">
+          <strong style="color:var(--ind);font-size:13.5px">🛡️ GHS Safety Hazards</strong>
+          <p style="margin:4px 0 0;font-size:12.5px;color:var(--mute)">Inspect pictograms, signal words, and lab PPE guidelines</p>
+        </div>
+        <div class="empty-card" role="button" tabindex="0" onclick="switchTab('sm')" style="cursor:pointer">
+          <strong style="color:var(--ind);font-size:13.5px">🔍 Similar Compounds</strong>
+          <p style="margin:4px 0 0;font-size:12.5px;color:var(--mute)">Explore molecules with 2D Tanimoto similarity ≥ 85%</p>
+        </div>
+        <div class="empty-card" role="button" tabindex="0" onclick="switchTab('ex')" style="cursor:pointer">
+          <strong style="color:var(--ind);font-size:13.5px">🧪 Experimental &amp; Bio Data</strong>
+          <p style="margin:4px 0 0;font-size:12.5px;color:var(--mute)">Inspect melting points, solubility, and ChEBI/ChEMBL roles</p>
+        </div>
+      </div>
+
+      ${p.syn.length ? `<div class="syn" aria-label="Synonyms" style="margin-top:16px">${p.syn.map(s => `<span>${esc(s)}</span>`).join("")}</div>` : ""}
+      <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="ghost" id="cp-smi" type="button" ${!p.smiles ? "disabled" : ""}>Copy SMILES</button>
+      </div>`;
+  }
+
+  // 2. Structure Tab (RDKit 2D depiction & functional group highlighting)
+  else if (tab === "st") {
+    if (!p.smiles) {
+      h = `<div class="notice notice-info"><h3>No SMILES Structure</h3><p>PubChem does not provide a SMILES string for this entry.</p></div>`;
+    } else if (rdkitStatus === "idle" || rdkitStatus === "loading") {
+      h = `
+        <div class="loading-box">
+          <div class="spinner" role="status" aria-label="Loading RDKit WASM"></div>
+          <p>Initializing RDKit.js chemical engine (WASM)…</p>
+        </div>`;
+    } else if (rdkitStatus === "failed") {
+      h = `
+        <div class="notice notice-warn">
+          <h3>RDKit Engine Unavailable</h3>
+          <p>The RDKit.js chemical structure depiction engine could not be initialized. Please check your internet connection and reload.</p>
+        </div>`;
+    } else {
+      h = `
+        ${isStudent ? `
+          <div class="edu-callout">
+            <strong>🎓 Student Guide: 2D Structures &amp; Functional Groups</strong>
+            <p style="margin:4px 0 0">
+              A 2D structure shows which atoms are bonded together. <strong>Functional groups</strong> are specific arrangements of atoms (such as alcohols, acids, or amines) that give the molecule its chemical reactivity and biological behavior. Click a detected group below to highlight where it sits on the skeleton!
+            </p>
+          </div>` : `
+          <div class="researcher-spec">
+            <strong>🔬 Researcher Mode: Cheminformatics Structure Graph &amp; SMARTS</strong>
+            <p style="margin:4px 0 0;font-size:12px;color:var(--mute)">
+              2D vector depiction generated via RDKit MinimalLib WASM. Functional group substructure matching executed against explicit atom-bond SMARTS patterns:
+            </p>
+            <div style="margin-top:6px;display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:12px">
+              ${Object.entries(FG).map(([k, v]) => `<span><b>${esc(k)}:</b></span> <code>${esc(v)}</code>`).join("")}
+            </div>
+          </div>`}
+        <div class="svgbox" id="svg" aria-label="2D chemical structure depiction">${drawMol(p.smiles)}</div>
+        <div class="fg" id="fg" role="group" aria-label="Functional group highlights"></div>
+        <p style="color:var(--mute);font-size:14px" id="fgn">Choose a detected functional group below to highlight matching atoms on the structure.</p>`;
+    }
+  }
+
+  // 3. Drug-likeness Tab
+  else if (tab === "dd") {
+    const n = viol(p);
+    const R = rules(p);
+    let verdictClass = "ok";
+    let verdictText = "Passes all Lipinski & Veber rules: oral drug-like profile";
+
+    if (n === 1) {
+      verdictClass = "warn";
+      verdictText = "1 rule violation: still within standard Lipinski oral tolerance";
+    } else if (n > 1) {
+      verdictClass = "bad";
+      verdictText = `${n} rule violations: poor oral bioavailability profile likely`;
+    }
+
+    h = `
+      ${isStudent ? `
+        <div class="edu-callout">
+          <strong>🎓 Student Guide: Lipinski's Rule of 5 &amp; Oral Bioavailability</strong>
+          <p style="margin:4px 0 0">
+            To work as a pill that you swallow, a drug must dissolve in stomach fluids AND pass through intestinal cell membranes into the bloodstream. Christopher Lipinski discovered that most successful oral medicines obey the <strong>Rule of 5</strong>:
+          </p>
+          <ul style="margin:6px 0 0;padding-left:20px;font-size:13px">
+            <li><strong>LogP:</strong> Measures how much a molecule prefers fat over water. High LogP (>5) means it gets trapped in fat; low LogP means it cannot cross membranes.</li>
+            <li><strong>Molecular Weight:</strong> Bulky molecules (>500 g/mol) have trouble passing through cell layers.</li>
+            <li><strong>H-Bond Donors &amp; Acceptors:</strong> Too many hydrogen bonds hold the molecule too tightly to water.</li>
+            <li><strong>Polar Surface Area (TPSA):</strong> Sum of polar atom surfaces (&le; 140 Å² ensures good passive permeability).</li>
+            <li><strong>Rotatable Bonds:</strong> Measures flexibility (&le; 10). Stiff molecules fit receptors without losing binding energy.</li>
+            <li><strong>What violations mean:</strong> 0 violations is ideal; 1 violation is widely tolerated (e.g. Lipitor); 2+ violations indicate low oral absorption.</li>
+          </ul>
+        </div>` : `
+        <div class="researcher-spec">
+          <strong>🔬 Researcher Mode: Physicochemical Criteria &amp; Formal Literature</strong>
+          <p style="margin:4px 0 0;font-size:12px;color:var(--mute)">
+            Methodology: Lipinski et al. (2001) <em>Adv. Drug Deliv. Rev.</em> (MW &le; 500, XLogP &le; 5, HBD &le; 5, HBA &le; 10); Veber et al. (2002) <em>J. Med. Chem.</em> (TPSA &le; 140 Å², Rotatable Bonds &le; 10).
+          </p>
+        </div>`}
+
+      <p class="verdict ${verdictClass}" role="status">${verdictText}</p>
+      ${R.map(r => {
+        const isBad = r.v != null && r.v > r.max;
+        const pct = r.v == null ? 0 : Math.min(100, (r.v / (r.max * 1.5)) * 100);
+        return `
+          <div class="rule">
+            <span>${r.k}</span>
+            <b class="${isBad ? "bad" : "ok"}">${fmt(r.v, 1)} ${r.u}</b>
+            <div class="gauge" aria-hidden="true">
+              <b style="width:${pct}%;background:var(${isBad ? "--bad" : "--ok"})"></b>
+            </div>
+            <small>Criterion: ≤ ${r.max} ${r.u} · Source: ${r.src} <span class="provenance-tag">${r.type}</span></small>
+          </div>`;
+      }).join("")}
+      ${crip(p)}
+
+      <!-- Structural Alerts (PAINS & Brenk Filters) -->
+      <div style="margin-top:20px;border-top:1px solid var(--line);padding-top:14px">
+        <h3 style="margin:0 0 8px;font-size:16px">Structural Alerts (Medicinal Chemistry Filters)</h3>
+        ${(() => {
+          const alerts = checkStructuralAlerts(p.smiles);
+          if (!alerts.length) {
+            return `
+              <div class="alert-box alert-clean">
+                ✓ No common PAINS or reactive structural alerts detected.
+              </div>`;
+          }
+          return alerts.map(a => `
+            <div class="alert-box alert-hit">
+              <strong>⚠️ ${esc(a.name)} [${esc(a.type)} Alert ×${a.count}]:</strong> ${esc(a.desc)}
+              ${!isStudent ? `<div style="font-family:monospace;font-size:12px;color:var(--mute);margin-top:3px">SMARTS: ${esc(a.smarts)}</div>` : ""}
+            </div>`).join("");
+        })()}
+        <p style="color:var(--mute);font-size:12.5px;line-height:1.45;margin-top:6px">
+          <em>Methodology notice:</em> Substructure alert patterns derived from Baell &amp; Holloway (2010) (PAINS - Pan-Assay Interference Compounds) and Brenk et al. (2008) (reactive/toxic functional groups). Note: The full C++ FilterCatalog is omitted in RDKit MinimalLib WASM, so curated SMARTS patterns are applied.
+        </p>
+      </div>
+
+      <p style="color:var(--mute);font-size:13.5px;margin-top:14px;line-height:1.5">
+        <em>Cheminformatics guideline:</em> Lipinski's Rule of 5 and Veber rules are empirical guidelines for oral small-molecule absorption, not immutable laws. Natural products, antibiotics (e.g. penicillin), and macrocycles frequently succeed despite rule violations.
+      </p>`;
+  }
+
+  // 4. Safety Tab (GHS Classification via PubChem PUG View)
+  else if (tab === "sf") {
+    if (!p.ghsLoaded) {
+      h = `
+        <div class="loading-box">
+          <div class="spinner" role="status" aria-label="Loading Safety Data"></div>
+          <p>Fetching GHS hazard classifications from PubChem PUG View…</p>
+        </div>`;
+    } else {
+      const g = p.ghs;
+      if (!g || g.isNoData) {
+        h = `
+          <div class="notice notice-info">
+            <h3>No GHS Hazard Record</h3>
+            <p>No Globally Harmonized System (GHS) classification was reported to PubChem for this compound. <em>Absence of GHS data does not imply that a compound is non-hazardous.</em> Always refer to the verified Safety Data Sheet (SDS) from your specific chemical vendor.</p>
+          </div>`;
+      } else if (g.isNotClassified) {
+        h = `
+          ${isStudent ? `
+            <div class="edu-callout">
+              <strong>🎓 Student Guide: Chemical Safety &amp; Laboratory Hazards</strong>
+              <p style="margin:4px 0 0">
+                This compound does not meet GHS hazard classification criteria according to primary regulatory reporting. Always wear appropriate laboratory PPE and follow standard laboratory safety guidelines.
+              </p>
+            </div>` : `
+            <div class="researcher-spec">
+              <strong>🔬 Researcher Mode: GHS &amp; ECHA Regulatory Inventories</strong>
+              <p style="margin:4px 0 0;font-size:12px;color:var(--mute)">
+                Aggregated inventory data indicates this compound is not classified as hazardous under UN GHS / EU CLP criteria.
+              </p>
+            </div>`}
+
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;flex-wrap:wrap">
+            <span class="verdict headline-verdict ok" style="margin:0">Not Classified</span>
+            <span class="provenance-tag">${esc(g.headline?.sourceName || "Primary Reference")}</span>
+          </div>
+
+          <div class="notice notice-ok" style="margin:10px 0 14px">
+            <h3>Not Classified as Hazardous</h3>
+            <p>${esc(g.headline?.summaryText || "Reported as not meeting GHS hazard criteria by primary regulatory notifications.")}</p>
+          </div>
+          <p style="color:var(--mute);font-size:13px;margin:6px 0 14px;font-style:italic">
+            Classification as listed by PubChem's primary source; suppliers can differ. Check the lot-specific SDS.
+          </p>
+
+          ${g.others && g.others.length ? `
+            <details style="margin-top:20px;border-top:1px solid var(--line);padding-top:12px">
+              <summary style="cursor:pointer;font-weight:600;font-size:14px;color:var(--ink);padding:6px 0">
+                Other notifications (${g.others.length})
+              </summary>
+              <div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">
+                ${g.others.map(o => `
+                  <div style="background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px">
+                      <strong style="font-size:13.5px;color:var(--ink)">${esc(o.sourceName)}</strong>
+                      <span style="font-size:12px;color:var(--mute);font-style:italic">Reported by a minority of sources</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+                      ${o.sig ? `<span class="verdict ${o.sig.toLowerCase() === 'danger' ? 'bad' : 'warn'}" style="font-size:12px;padding:2px 8px;margin:0">${esc(o.sig)}</span>` : `<span style="font-size:12px;color:var(--mute)">Not Classified</span>`}
+                      ${o.pics.length ? `<div style="display:flex;gap:4px">${o.pics.map(p => `<img src="${esc(p.u)}" alt="${esc(p.n)}" title="${esc(p.n)}" style="height:24px;width:24px">`).join("")}</div>` : ""}
+                    </div>
+                    ${o.st.length ? `
+                      <div style="font-size:12.5px;color:var(--ink)">
+                        ${o.st.map(s => `<div style="padding:2px 0">• ${esc(s)}</div>`).join("")}
+                      </div>` : ""}
+                  </div>
+                `).join("")}
+              </div>
+            </details>` : ""}
+
+          <p style="color:var(--mute);font-size:12.5px;margin-top:16px;line-height:1.5">
+            <em>Source &amp; Disclaimer:</em> Aggregated GHS classifications reported in PubChem and ECHA inventories. Classifications may vary by supplier, manufacturer, and purity grade. Always read the authoritative lot-specific SDS.
+          </p>`;
+      } else {
+        const isDanger = g.headline.sig && g.headline.sig.toLowerCase() === "danger";
+
+        h = `
+          ${isStudent ? `
+            <div class="edu-callout">
+              <strong>🎓 Student Guide: Chemical Safety &amp; Laboratory Hazards</strong>
+              <p style="margin:4px 0 0">
+                The Globally Harmonized System (GHS) classifies laboratory hazards.
+                <strong>Danger</strong> indicates higher severity (severe acute toxicity, flammable, corrosive), while <strong>Warning</strong> indicates moderate hazard.
+                Always wear laboratory PPE (safety goggles, lab coat, nitrile gloves) and consult your instructor and the official Safety Data Sheet (SDS) before handling reagents.
+              </p>
+            </div>` : `
+            <div class="researcher-spec">
+              <strong>🔬 Researcher Mode: GHS &amp; ECHA CLP Regulatory Inventories</strong>
+              <p style="margin:4px 0 0;font-size:12px;color:var(--mute)">
+                Consensus classification from PubChem primary reference (${esc(g.headline.sourceName)}). Individual vendor notifications and minority supplier submissions are documented below.
+              </p>
+            </div>`}
+
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;flex-wrap:wrap">
+            <span class="verdict headline-verdict ${isDanger ? "bad" : "warn"}" style="margin:0">${esc(g.headline.sig || "Hazard Classified")}</span>
+            <span class="provenance-tag">${esc(g.headline.sourceName)}</span>
+          </div>
+
+          <p style="margin:4px 0 12px;font-size:13px;color:var(--mute);font-style:italic">
+            Classification as listed by PubChem's primary source; suppliers can differ. Check the lot-specific SDS.
+          </p>
+
+          ${g.headline.hazardClasses && g.headline.hazardClasses.length ? `
+            <div style="margin:10px 0 14px">
+              <div style="font-size:13px;font-weight:600;color:var(--mute);margin-bottom:6px">Notified Hazard Classes &amp; Percentages:</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px">
+                ${g.headline.hazardClasses.map(hc => `
+                  <span style="background:var(--ind-soft);color:var(--ind);border:1px solid var(--line);border-radius:6px;padding:3px 9px;font-size:12.5px;font-weight:600">
+                    ${esc(hc.label)}
+                  </span>
+                `).join("")}
+              </div>
+            </div>` : ""}
+
+          ${g.headline.pics.length ? `
+            <div class="pics" aria-label="GHS Hazard Pictograms" style="margin-bottom:14px">
+              ${g.headline.pics.map(x => `<img src="${esc(x.u)}" alt="${esc(x.n)}" title="${esc(x.n)}">`).join("")}
+            </div>` : ""}
+
+          ${g.headline.st.length ? `
+            <div aria-label="GHS Hazard Statements">
+              <div style="font-size:14px;font-weight:600;color:var(--ink);margin-bottom:8px">
+                Hazard Statements (${g.headline.st.length}):
+              </div>
+              ${g.headline.st.map(x => `<div class="hs">${esc(x)}</div>`).join("")}
+            </div>` : ""}
+
+          ${g.others && g.others.length ? `
+            <details style="margin-top:20px;border-top:1px solid var(--line);padding-top:12px">
+              <summary style="cursor:pointer;font-weight:600;font-size:14px;color:var(--ink);padding:6px 0">
+                Other notifications (${g.others.length})
+              </summary>
+              <div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">
+                ${g.others.map(o => `
+                  <div style="background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px">
+                      <strong style="font-size:13.5px;color:var(--ink)">${esc(o.sourceName)}</strong>
+                      <span style="font-size:12px;color:var(--mute);font-style:italic">Reported by a minority of sources</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+                      ${o.sig ? `<span class="verdict ${o.sig.toLowerCase() === 'danger' ? 'bad' : 'warn'}" style="font-size:12px;padding:2px 8px;margin:0">${esc(o.sig)}</span>` : `<span style="font-size:12px;color:var(--mute)">Not Classified</span>`}
+                      ${o.pics.length ? `<div style="display:flex;gap:4px">${o.pics.map(p => `<img src="${esc(p.u)}" alt="${esc(p.n)}" title="${esc(p.n)}" style="height:24px;width:24px">`).join("")}</div>` : ""}
+                    </div>
+                    ${o.st.length ? `
+                      <div style="font-size:12.5px;color:var(--ink)">
+                        ${o.st.map(s => `<div style="padding:2px 0">• ${esc(s)}</div>`).join("")}
+                      </div>` : ""}
+                  </div>
+                `).join("")}
+              </div>
+            </details>` : ""}
+
+          <p style="color:var(--mute);font-size:12.5px;margin-top:16px;line-height:1.5">
+            <em>Source &amp; Disclaimer:</em> Aggregated GHS classifications reported in PubChem and ECHA inventories. Classifications may vary by supplier, manufacturer, and purity grade. Always read the authoritative lot-specific SDS.
+          </p>`;
+      }
+    }
+  }
+
+  // 5. Similar Compounds Tab
+  else if (tab === "sm") {
+    if (!p.similarLoaded) {
+      h = `
+        <div class="loading-box">
+          <div class="spinner" role="status" aria-label="Loading Similar Compounds"></div>
+          <p>Querying PubChem fastsimilarity_2d (Tanimoto ≥ 85%)…</p>
+        </div>`;
+    } else {
+      h = `
+        ${isStudent ? `
+          <div class="edu-callout">
+            <strong>🎓 Student Guide: Chemical Similarity &amp; Tanimoto Metric</strong>
+            <p style="margin:4px 0 0">
+              Chemists calculate molecular similarity using <strong>fingerprints</strong>—binary sequences representing 2D substructural fragments. The <strong>Tanimoto coefficient</strong> measures the fraction of shared fragments ($0$ to $100\\%$). Molecules with $\\ge 85\\%$ similarity frequently share biological targets and pharmacological mechanisms.
+            </p>
+          </div>` : `
+          <div class="researcher-spec">
+            <strong>🔬 Researcher Mode: 2D Substructure Fingerprint Similarity</strong>
+            <p style="margin:4px 0 0;font-size:12px;color:var(--mute)">
+              Query executed via PubChem <code>fastsimilarity_2d</code> endpoint with Tanimoto threshold = 85. Fingerprint: 881-bit PubChem structural keys. 2D vector thumbnail graphs depicted via RDKit MinimalLib WASM.
+            </p>
+          </div>`}
+
+        <h3 style="margin:0 0 10px;font-size:18px">Similar Compounds <span class="provenance-tag">2D Tanimoto ≥ 85%</span></h3>
+        ${p.similar && p.similar.length ? `
+          <div class="sim-grid">
+            ${p.similar.map(s => `
+              <div class="sim-card" role="button" tabindex="0" data-q="${s.cid}" title="Click to explore ${esc(s.name)} (CID ${s.cid})">
+                <div class="sim-thumb">${drawThumbnail(s.smiles)}</div>
+                <span class="sim-name">${esc(s.name)}</span>
+                <span class="sim-cid">CID ${s.cid}</span>
+              </div>
+            `).join("")}
+          </div>` : `<p style="color:var(--mute);font-size:14px;margin:4px 0">No structurally similar compounds found in PubChem with Tanimoto similarity ≥ 85%.</p>`}`;
+    }
+  }
+
+  // 6. Properties & Bio Tab (Experimental Properties & Bio Context)
+  else if (tab === "ex") {
+    if (!p.expBioLoaded) {
+      h = `
+        <div class="loading-box">
+          <div class="spinner" role="status" aria-label="Loading Properties and Biological Roles"></div>
+          <p>Retrieving experimental physical properties and ChEBI/ChEMBL bio context…</p>
+        </div>`;
+    } else {
+      h = `
+        ${isStudent ? `
+          <div class="edu-callout">
+            <strong>🎓 Student Guide: Experimental Bench Data &amp; Biological Roles</strong>
+            <p style="margin:4px 0 0">
+              Unlike theoretical computer calculations, <strong>experimental physical properties</strong> are measured on real bench reagents (melting points, boiling points, solubility). <strong>Biological roles</strong> show what this chemical does inside living organisms or medical therapies.
+            </p>
+          </div>` : `
+          <div class="researcher-spec">
+            <strong>🔬 Researcher Mode: Empirical Bench Records &amp; Bioactivity Ontologies</strong>
+            <p style="margin:4px 0 0;font-size:12px;color:var(--mute)">
+              Experimental physical properties extracted from PubChem PUG View with primary source references. Biological roles mapped to ChEBI ontology term trees. Bioactivity mapped to ChEMBL bio-registry records by InChIKey.
+            </p>
+          </div>`}
+
+        <!-- Why It Matters Section (ChEBI & ChEMBL) -->
+        ${(p.bio && (p.bio.roles.length > 0 || p.bio.chemblId || p.bio.chebiId)) ? `
+          <div class="bio-box">
+            <h3>Why It Matters ${isStudent ? '<span style="font-weight:normal;font-size:12.5px;color:var(--mute)">(Biological Roles &amp; Medical Uses)</span>' : '<span class="provenance-tag">Ontology Annotations</span>'}</h3>
+            ${p.bio.roles.length ? `
+              <div style="font-size:13.5px;color:var(--mute);margin-bottom:6px">${isStudent ? "What this molecule does in biology (ChEBI Ontology):" : "Biological Roles (ChEBI Ontology RO_0000087):"}</div>
+              <div class="role-pills">
+                ${p.bio.roles.map(r => `<span class="role-pill">${esc(r)}</span>`).join("")}
+              </div>` : ""}
+            <div style="font-size:13px;color:var(--mute);margin-top:8px;display:flex;gap:14px;flex-wrap:wrap">
+              ${p.bio.chebiId ? `<span>ChEBI Record: <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=${encodeURIComponent(p.bio.chebiId)}" target="_blank" rel="noopener noreferrer">${esc(p.bio.chebiId)}</a></span>` : ""}
+              ${p.bio.chemblId ? `<span>ChEMBL: <a href="https://www.ebi.ac.uk/chembl/compound_report_card/${encodeURIComponent(p.bio.chemblId)}/" target="_blank" rel="noopener noreferrer">${esc(p.bio.chemblId)}</a> ${p.bio.chembl?.maxPhase ? `· <b>Phase ${fmt(p.bio.chembl.maxPhase, 0)} ${Number(p.bio.chembl.maxPhase) >= 4 ? "(Approved Drug)" : "(Investigational)"}</b>` : ""}</span>` : ""}
+            </div>
+          </div>` : ""}
+
+        <!-- Experimental Physical Properties Section -->
+        <div style="margin:20px 0 16px">
+          <h3 style="margin:0 0 8px;font-size:17px">Experimental Physical Properties <span class="provenance-tag">experimental</span></h3>
+          ${p.exp && p.exp.length ? `
+            <dl style="margin:8px 0">
+              ${p.exp.map(e => `
+                <dt>${esc(e.name)}</dt>
+                <dd>${esc(e.val)} <span class="provenance-tag">${esc(e.source)}</span></dd>
+              `).join("")}
+            </dl>` : `<p style="color:var(--mute);font-size:13.5px;margin:4px 0">No experimental physical properties reported in PubChem PUG View for this entry.</p>`}
+        </div>`;
+    }
+  }
+
+  // 7. Compare Tab
+  else if (tab === "cp") {
+    h = `
+      ${isStudent ? `
+        <div class="edu-callout">
+          <strong>🎓 Student Guide: Comparative Molecular Analysis</strong>
+          <p style="margin:4px 0 0">
+            Compare two chemical compounds side-by-side to understand how small modifications in molecular structure alter size, water solubility, and oral absorption.
+          </p>
+          ${cmp ? `<p style="margin:6px 0 0;font-weight:500;color:var(--ink)"><strong>Comparison Insight:</strong> ${esc(getStudentComparisonSummary(p, cmp))}</p>` : ""}
+        </div>` : `
+        <div class="researcher-spec">
+          <strong>🔬 Researcher Mode: Quantitative Descriptor Comparison Matrix</strong>
+          <p style="margin:4px 0 0;font-size:12px;color:var(--mute)">
+            Side-by-side evaluation of physicochemical descriptors with quantitative difference deltas (&Delta;) and rule compliance.
+          </p>
+        </div>`}
+
+      <form id="cf" style="margin-bottom:14px" role="search" aria-label="Compare compound">
+        <input type="text" id="cq" placeholder="Compare ${esc(p.name)} with another compound…" aria-label="Second compound name or formula" maxlength="250">
+        <button type="submit" id="cp-btn">Compare</button>
+      </form>`;
+
+    if (cmp) {
+      const rows = [
+        ["Formula", x => sub(esc(x.formula)), null],
+        ["Molar mass (g/mol)", x => `${fmt(x.mw)} <span class="provenance-tag">computed</span>`, (cmp.mw != null && p.mw != null) ? (cmp.mw - p.mw) : null],
+        ["LogP (XLogP3-AA)", x => `${fmt(x.logp, 1)} <span class="provenance-tag">computed</span>`, (cmp.logp != null && p.logp != null) ? (cmp.logp - p.logp) : null],
+        ["TPSA (Å²)", x => `${fmt(x.tpsa, 1)} <span class="provenance-tag">computed</span>`, (cmp.tpsa != null && p.tpsa != null) ? (cmp.tpsa - p.tpsa) : null],
+        ["H-bond donors", x => x.hbd != null ? x.hbd : "n/a", (cmp.hbd != null && p.hbd != null) ? (cmp.hbd - p.hbd) : null],
+        ["H-bond acceptors", x => x.hba != null ? x.hba : "n/a", (cmp.hba != null && p.hba != null) ? (cmp.hba - p.hbd) : null],
+        ["Rotatable bonds", x => x.rot != null ? x.rot : "n/a", (cmp.rot != null && p.rot != null) ? (cmp.rot - p.rot) : null],
+        ["Complexity", x => fmt(x.cx, 0), (cmp.cx != null && p.cx != null) ? (cmp.cx - p.cx) : null],
+        ["Rule violations", x => viol(x), viol(cmp) - viol(p)]
+      ];
+
+      h += `
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Property</th>
+                <th scope="col">${esc(p.name)}</th>
+                <th scope="col">${esc(cmp.name)}</th>
+                ${!isStudent ? `<th scope="col">Delta (&Delta;)</th>` : ""}
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map(r => {
+                const deltaVal = r[2];
+                let deltaHtml = "";
+                if (!isStudent) {
+                  if (deltaVal != null && typeof deltaVal === "number") {
+                    const sign = deltaVal > 0 ? "+" : "";
+                    const cls = deltaVal > 0 ? "delta-pos" : (deltaVal < 0 ? "delta-neg" : "");
+                    deltaHtml = `<td class="${cls}">${sign}${fmt(deltaVal, 1)}</td>`;
+                  } else {
+                    deltaHtml = `<td>—</td>`;
+                  }
+                }
+                return `<tr><th scope="row">${r[0]}</th><td>${r[1](p)}</td><td>${r[1](cmp)}</td>${deltaHtml}</tr>`;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>`;
+    } else {
+      h += `<p style="color:var(--mute)">Enter a second compound above to inspect side-by-side physicochemical descriptors.</p>`;
+    }
+  }
+
+  pane.innerHTML = h;
+
+  // Post-render bindings
+  if (tab === "st" && RDK && p.smiles) {
+    let m = null;
+    try {
+      m = RDK.get_mol(p.smiles);
+      const fg = $("#fg");
+      if (m && fg) {
+        Object.entries(FG).forEach(([k, v]) => {
+          const r = match(m, v);
+          if (r.n > 0) {
+            const b = document.createElement("button");
+            b.className = "ghost";
+            b.setAttribute("aria-pressed", "false");
+            b.textContent = isStudent ? `${k} ×${r.n}` : `${k} [${v}] ×${r.n}`;
+            b.onclick = () => {
+              const on = b.getAttribute("aria-pressed") !== "true";
+              fg.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", "false"));
+              b.setAttribute("aria-pressed", on ? "true" : "false");
+              const svgBox = $("#svg");
+              if (svgBox) {
+                svgBox.innerHTML = drawMol(p.smiles, on ? r : null);
+              }
+            };
+            fg.appendChild(b);
+          }
+        });
+        const fgn = $("#fgn");
+        if (fgn && !fg.children.length) {
+          fgn.textContent = "No common functional groups detected for this structure.";
+        }
+      }
+    } catch (e) {
+      console.warn("Functional group error:", e);
+    } finally {
+      if (m) m.delete();
+    }
+  }
+
+  const copyBtn = $("#cp-smi");
+  if (copyBtn) {
+    copyBtn.onclick = () => {
+      if (!p.smiles) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(p.smiles)
+          .then(() => {
+            copyBtn.textContent = "Copied SMILES!";
+            setTimeout(() => { copyBtn.textContent = "Copy SMILES"; }, 2000);
+          })
+          .catch(() => {
+            fallbackCopy(p.smiles, copyBtn, "Copied SMILES!");
+          });
+      } else {
+        fallbackCopy(p.smiles, copyBtn, "Copied SMILES!");
+      }
+    };
+  }
+
+  const compForm = $("#cf");
+  if (compForm) {
+    compForm.onsubmit = async e => {
+      e.preventDefault();
+      const q = ($("#cq").value || "").trim().replace(/^["']|["']$/g, "").trim();
+      if (!q) return;
+      const cpBtn = $("#cp-btn");
+      if (cpBtn) cpBtn.disabled = true;
+      try {
+        const r = await resolve(q);
+        cmp = await fetchProps(r.cid);
+        render();
+      } catch (err) {
+        pane.insertAdjacentHTML("beforeend", `
+          <div class="notice notice-warn">
+            <h3>Comparison Search Failed</h3>
+            <p>${esc(err.message)}</p>
+          </div>`);
+      } finally {
+        if (cpBtn) cpBtn.disabled = false;
+      }
+    };
+  }
+}
+
+function fallbackCopy(text, btn, successMsg = "Copied!") {
+  const orig = btn.textContent;
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try {
+    document.execCommand("copy");
+    btn.textContent = successMsg;
+  } catch (err) {
+    btn.textContent = successMsg;
+  }
+  setTimeout(() => { btn.textContent = orig; }, 2000);
+  document.body.removeChild(ta);
+}
+
+function renderHist() {
+  const el = $("#hist");
+  if (!el) return;
+  el.innerHTML = history.length
+    ? "Recent searches: " + history.map(h => `<a href="#${encodeURIComponent(h.q)}" data-q="${esc(h.q)}">${esc(h.q)}</a>`).join(" · ")
+    : "";
+}
+
+/* ==========================================================================
+   Event Listeners & Initialization
+   ========================================================================== */
+$("#f").onsubmit = e => {
+  e.preventDefault();
+  explore($("#q").value);
+};
+
+// Global click handler for chips, tabs, styles, and similar cards
+document.addEventListener("click", e => {
+  const t = e.target.closest("button, a, [data-q]");
+  if (!t) return;
+
+  if (t.dataset.q) {
+    e.preventDefault();
+    $("#q").value = t.dataset.q;
+    explore(t.dataset.q);
+    return;
+  }
+
+  if (t.dataset.t) {
+    switchTab(t.dataset.t);
+    return;
+  }
+
+  if (t.dataset.s) {
+    style = t.dataset.s;
+    document.querySelectorAll("[data-s]").forEach(b => {
+      b.setAttribute("aria-pressed", b === t ? "true" : "false");
+    });
+    if (cur) applyStyle();
+    return;
+  }
+
+  if (t.dataset.mode) {
+    setMode(t.dataset.mode);
+    return;
+  }
+});
+
+// Keyboard activation for accessible cards and interactive elements
+document.addEventListener("keydown", e => {
+  if (e.key === "Enter" || e.key === " ") {
+    const t = e.target.closest("[data-q][role='button']");
+    if (t) {
+      e.preventDefault();
+      $("#q").value = t.dataset.q;
+      explore(t.dataset.q);
+    }
+  }
+});
+
+// Accessible keyboard navigation for tabs
+const tabList = document.querySelector(".tabs");
+if (tabList) {
+  tabList.addEventListener("keydown", e => {
+    const tabs = Array.from(tabList.querySelectorAll("[role=tab]"));
+    const currentIndex = tabs.findIndex(t => t.getAttribute("aria-selected") === "true");
+    let nextIndex = null;
+
+    if (e.key === "ArrowRight") {
+      nextIndex = (currentIndex + 1) % tabs.length;
+    } else if (e.key === "ArrowLeft") {
+      nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+    } else if (e.key === "Home") {
+      nextIndex = 0;
+    } else if (e.key === "End") {
+      nextIndex = tabs.length - 1;
+    }
+
+    if (nextIndex !== null) {
+      e.preventDefault();
+      const targetTab = tabs[nextIndex];
+      targetTab.focus();
+      switchTab(targetTab.dataset.t);
+    }
+  });
+}
+
+// Viewer Spin Toggle
+$("#spin").onclick = function() {
+  const isCurrentlySpinning = this.getAttribute("aria-pressed") === "true";
+  const nextState = !isCurrentlySpinning;
+  this.setAttribute("aria-pressed", nextState ? "true" : "false");
+  if (cur && viewer) {
+    viewer.spin(nextState ? "y" : false);
+  }
+};
+
+// Download SDF
+$("#dl").onclick = () => {
+  if (!sdf) {
+    alert("No SDF structure coordinates available to download for this entry.");
+    return;
+  }
+  const blob = new Blob([sdf], { type: "chemical/x-mdl-sdfile" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${(cur?.name || "molecule").replace(/[\/\\?%*:|"<>]/g, "_")}.sdf`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+};
+
+// Search Autocomplete with Min 3 chars & 400ms Debounce
+let acTimer;
+$("#q").addEventListener("input", e => {
+  clearTimeout(acTimer);
+  const val = e.target.value.trim().replace(/^["']|["']$/g, "").trim();
+  if (val.length < 3) {
+    $("#ac").innerHTML = "";
+    return;
+  }
+  acTimer = setTimeout(async () => {
+    try {
+      const d = await j(`https://pubchem.ncbi.nlm.nih.gov/rest/autocomplete/compound/${encodeURIComponent(val)}/json?limit=8`);
+      const terms = d?.dictionary_terms?.compound || [];
+      $("#ac").innerHTML = terms.map(x => `<option value="${esc(x)}">`).join("");
+    } catch (e) {}
+  }, 400);
+});
+
+// Student / Researcher Mode Toggles
+const btnStudent = $("#mode-student");
+const btnResearcher = $("#mode-researcher");
+if (btnStudent) btnStudent.onclick = () => setMode("student");
+if (btnResearcher) btnResearcher.onclick = () => setMode("researcher");
+
+// Citation Copy
+const btnCite = $("#btn-cite");
+if (btnCite) btnCite.onclick = () => copyCitation(btnCite);
+
+// 2D Molecule Sketcher Drawer Toggles
+const btnDraw = $("#btn-draw");
+if (btnDraw) btnDraw.onclick = () => toggleDrawer();
+
+const btnCloseDrawer = $("#btn-close-drawer");
+if (btnCloseDrawer) btnCloseDrawer.onclick = () => toggleDrawer(false);
+
+const btnDrawerLoadCurrent = $("#btn-drawer-load-current");
+if (btnDrawerLoadCurrent) {
+  btnDrawerLoadCurrent.onclick = () => {
+    if (cur && cur.smiles && jsmeApplet) {
+      jsmeApplet.readGenericMolecularInput(cur.smiles);
+    }
+  };
+}
+
+const btnDrawerClear = $("#btn-drawer-clear");
+if (btnDrawerClear) {
+  btnDrawerClear.onclick = () => {
+    if (jsmeApplet) jsmeApplet.reset();
+  };
+}
+
+const btnDrawerSearch = $("#btn-drawer-search");
+if (btnDrawerSearch) {
+  btnDrawerSearch.onclick = () => {
+    if (!jsmeApplet) return;
+    const smi = (jsmeApplet.smiles() || "").trim();
+    if (!smi) {
+      alert("Please sketch a chemical structure first.");
+      return;
+    }
+    $("#q").value = smi;
+    toggleDrawer(false);
+    explore(smi);
+  };
+}
+
+// About Modal Event Listeners
+const aboutModal = $("#about-modal");
+const btnAbout = $("#btn-about");
+const btnCloseAbout = $("#btn-close-about");
+const btnModalCite = $("#btn-modal-cite");
+
+function toggleAboutModal(open) {
+  if (!aboutModal) return;
+  const shouldOpen = open !== undefined ? open : (aboutModal.hidden || aboutModal.hasAttribute("hidden"));
+  if (shouldOpen) {
+    aboutModal.removeAttribute("hidden");
+    aboutModal.hidden = false;
+    btnAbout?.setAttribute("aria-expanded", "true");
+    btnCloseAbout?.focus();
+  } else {
+    aboutModal.setAttribute("hidden", "");
+    aboutModal.hidden = true;
+    btnAbout?.setAttribute("aria-expanded", "false");
+    btnAbout?.focus();
+  }
+}
+
+if (btnAbout) btnAbout.onclick = (e) => { e.preventDefault(); toggleAboutModal(true); };
+if (btnCloseAbout) btnCloseAbout.onclick = (e) => { e.preventDefault(); toggleAboutModal(false); };
+if (aboutModal) {
+  aboutModal.onclick = e => {
+    if (e.target === aboutModal) toggleAboutModal(false);
+  };
+}
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && aboutModal && !aboutModal.hidden) {
+    toggleAboutModal(false);
+  }
+});
+if (btnModalCite) btnModalCite.onclick = () => copyCitation(btnModalCite);
+
+// App Startup
+initViewer();
+renderHist();
+setMode(mode);
+
+// URL Hash routing
+if (location.hash.length > 1) {
+  const initial = decodeURIComponent(location.hash.slice(1));
+  $("#q").value = initial;
+  explore(initial);
+}
+</script>
+</body>
+</html>
